@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EstateStatus {
+  INITIATION
+  ADVOCACY
+  PROCESSING
+  FINALIZATION
+  CLOSED
+}
+
+enum AssetStatus {
+  DISCOVERED
+  CONTACTED
+  VERIFIED
+  DISTRIBUTED
+  LOCKED
+}
+
+enum CommChannel {
+  FAX
+  MAIL
+  EMAIL
+  PORTAL
+}
+
+enum StakeholderType {
+  EXECUTOR
+  BENEFICIARY
+  ATTORNEY
+  CPA
+  INSTITUTION_REP
+}
+
+enum UserRole {
+  EXECUTOR
+  BENEFICIARY
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String?   // Null for OAuth users
+  name          String
+  role          UserRole
+  state         String    // US state code (e.g., "NJ", "CA")
+  
+  // OAuth fields
+  googleId      String?   @unique
+  
+  // Relationships
+  estates       Estate[]
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Session {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Security tracking
+  tokenHash     String   @unique  // SHA-256 hash of JWT token
+  ipAddress     String
+  userAgent     String   @db.Text
+  deviceId      String?  // Browser fingerprint
+  
+  // Geolocation (for suspicious activity detection)
+  country       String?
+  region        String?
+  city          String?
+  
+  // Session lifecycle
+  createdAt     DateTime @default(now())
+  lastActivity  DateTime @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([ipAddress])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  // Action details
+  action      String   // "LOGIN", "VIEW_SSN", "DOWNLOAD_DOCUMENT", "UPDATE_ESTATE"
+  resource    String   // "Estate:uuid", "Document:uuid"
+  result      String   // "SUCCESS", "FAILURE", "DENIED"
+  
+  // Security context
+  ipAddress   String
+  userAgent   String   @db.Text
+  sessionId   String?
+  
+  // Metadata
+  metadata    Json?    // Additional context (e.g., what changed)
+  timestamp   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+  @@index([resource])
+}
+
+model Estate {
+  id                    String         @id @default(uuid())
+  name                  String         // Estate name (e.g., "Doe Estate")
+  deceasedInfo          Json           // { name, dob, dod, addresses }
+  deceasedSSN_Encrypted String?        // AES-256 encrypted SSN
+  deceasedState         String?        // State of decedent's residence (for probate jurisdiction)
+  status                EstateStatus   @default(INITIATION)
+  complexityScore       Int            @default(1)
+  metadata              Json?          // Flexible field for jurisdiction/tier-specific data
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  // User relationship
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+
+  stakeholders    Stakeholder[]
+  assets          Asset[]
+  communications  Communication[]
+  
+  @@index([userId])
+}
+
+model Stakeholder {
+  id          String          @id @default(uuid())
+  estateId    String
+  estate      Estate          @relation(fields: [estateId], references: [id])
+  type        StakeholderType
+  info        Json            // { name, email, phone, address, relationship }
+  permissions Json            // { accessLevel, modules: [] }
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+
+  @@index([estateId])
+}
+
+model Asset {
+  id           String      @id @default(uuid())
+  estateId     String
+  estate       Estate      @relation(fields: [estateId], references: [id])
+  type         String      // Brokerage, IRA, Real Estate, etc.
+  institution  String      // e.g., Fidelity, Invesco
+  status       AssetStatus @default(DISCOVERED)
+  value        Decimal?    @db.Decimal(15, 2)
+  requirements Json        // { formsNeeded: [], msgRequired: boolean, staleDateLimit: int }
+  metadata     Json?       // Dynamic institution-specific data (e.g., Fidelity account type)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([estateId])
+}
+
+model Communication {
+  id          String      @id @default(uuid())
+  estateId    String
+  estate      Estate      @relation(fields: [estateId], references: [id])
+  channel     CommChannel
+  providerId  String?     // Tracking ID from Lob/SRFax
+  content     String      @db.Text
+  status      String      // Sent, Delivered, Failed, Replied
+  auditTrail  Json        // [{ status: 'sent', timestamp: '...' }]
+  metadata    Json?       // Escalation level, target recipient, etc.
+  createdAt   DateTime    @default(now())
+
+  @@index([estateId])
+}

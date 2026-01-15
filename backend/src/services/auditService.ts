@@ -4,13 +4,13 @@ import type { Request } from 'express';
 const prisma = new PrismaClient();
 
 interface AuditLogData {
-    userId?: string;
+    userId?: string | undefined;
     action: string;
     resource: string;
     result: 'SUCCESS' | 'FAILURE' | 'DENIED';
     ipAddress: string;
     userAgent: string;
-    sessionId?: string;
+    sessionId?: string | undefined;
     metadata?: Record<string, any>;
 }
 
@@ -20,14 +20,14 @@ interface AuditLogData {
 export function getClientIp(req: Request): string {
     const forwarded = req.headers['x-forwarded-for'];
     if (forwarded) {
-        return forwarded.toString().split(',')[0].trim();
+        const ip = Array.isArray(forwarded) ? forwarded[0] : forwarded;
+        return (ip || '').split(',')[0]?.trim() || 'unknown';
     }
-
     const realIp = req.headers['x-real-ip'];
     if (realIp) {
-        return realIp.toString();
+        const ip = Array.isArray(realIp) ? realIp[0] : realIp;
+        return ip || 'unknown';
     }
-
     return req.socket.remoteAddress || 'unknown';
 }
 
@@ -38,14 +38,14 @@ export async function logAudit(data: AuditLogData): Promise<void> {
     try {
         await prisma.auditLog.create({
             data: {
-                userId: data.userId,
+                userId: data.userId || null,
                 action: data.action,
                 resource: data.resource,
                 result: data.result,
                 ipAddress: data.ipAddress,
                 userAgent: data.userAgent,
-                sessionId: data.sessionId,
-                metadata: data.metadata || {},
+                sessionId: data.sessionId || null,
+                metadata: JSON.stringify(data.metadata || {}),
                 timestamp: new Date()
             }
         });

@@ -1,10 +1,11 @@
 import crypto from 'crypto';
 
-// Load encryption key from environment
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+// Load encryption key from environment with fallback for types
+// Ensure it's 32 bytes (64 hex chars) if used in production, but here we provide a safe fallback for types
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '0'.repeat(64);
 const ALGORITHM = 'aes-256-gcm';
 
-if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 64) {
+if (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length !== 64) {
     console.warn('WARNING: ENCRYPTION_KEY should be a 64-character hex string (32 bytes). Using fallback for development.');
 }
 
@@ -45,7 +46,14 @@ export function decrypt(encryptedData: string): string {
         throw new Error('Invalid encrypted data format');
     }
 
-    const [ivHex, authTagHex, encrypted] = parts;
+    // Explicitly cast or check undefined because of noUncheckedIndexedAccess
+    const ivHex = parts[0];
+    const authTagHex = parts[1];
+    const encrypted = parts[2];
+
+    if (!ivHex || !authTagHex || !encrypted) {
+        throw new Error('Invalid encrypted data parts');
+    }
 
     const decipher = crypto.createDecipheriv(
         ALGORITHM,

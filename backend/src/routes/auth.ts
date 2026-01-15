@@ -10,7 +10,7 @@ const router = express.Router();
  */
 router.post('/register', async (req: Request, res: Response) => {
     try {
-        const { email, password, name, role, state } = req.body;
+        const { email, password, name, role, state, estateType } = req.body;
 
         // Validation
         if (!email || !password || !name || !role || !state) {
@@ -32,7 +32,8 @@ router.post('/register', async (req: Request, res: Response) => {
             password,
             name,
             role,
-            state
+            state,
+            estateType
         });
 
         res.json({

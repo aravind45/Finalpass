@@ -1,0 +1,15 @@
+{{!-- will.hbs – Simple Will template --}}
+{{#if estate}}
+Estate Name: {{estate.name}}
+Deceased: {{estate.deceasedInfo}}
+Date: {{date}}
+
+I, {{estate.user.name}}, hereby bequeath my assets as follows:
+{{#each estate.assets}}
+- {{type}} ({{institution}}): ${{value}}
+{{/each}}
+
+Signed,
+____________________
+{{estate.user.name}}
+{{/if}}

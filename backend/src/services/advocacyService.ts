@@ -1,1 +1,34 @@
-export interface AdvocacyContext {\n  institution: string;\n  accountType: string;\n  daysSilent: number;\n  executorName: string;\n}\n\nexport class AdvocacyService {\n  static async generateEscalationLetter(ctx: AdvocacyContext): Promise<string> {\n    console.log(\Drafting escalation for \...\);\n    // TODO: Integrate OpenAI/Claude API with the 'Enforcer' prompt\n    return \Dear Compliance Officer at \,\\n\\nThis is a formal notice regarding the \ for the Estate which has Been silent for \ days...\;\n  }\n}
+// backend/src/services/advocacyService.ts
+export interface AdvocacyContext {
+    institution: string;
+    accountType: string;
+    daysSilent: number;
+    executorName: string;
+}
+
+import { aiService } from './aiService.js';
+
+export class AdvocacyService {
+    /** Generate an escalation letter */
+    static async generateEscalationLetter(ctx: AdvocacyContext): Promise<string> {
+        console.log(`Drafting escalation for ${ctx.institution}`);
+
+        const promptDetails = `
+            Institution: ${ctx.institution}
+            Account Type: ${ctx.accountType}
+            Days Silent: ${ctx.daysSilent}
+            Executor: ${ctx.executorName}
+            
+            Context: The institution has been unresponsive to previous requests to close the account or transfer assets. 
+            This is a formal escalation.
+        `.trim();
+
+        return await aiService.generateDraft({
+            type: 'letter',
+            recipient: `Compliance Officer at ${ctx.institution}`,
+            purpose: 'Formal Complaint regarding Unresponsive Estate Settlement Request',
+            tone: 'stern',
+            keyDetails: promptDetails
+        });
+    }
+}

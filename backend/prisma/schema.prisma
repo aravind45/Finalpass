@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// SQLite Compatible Schema
 
 generator client {
   provider = "prisma-client-js"
@@ -7,51 +6,16 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-}
-
-enum EstateStatus {
-  INITIATION
-  ADVOCACY
-  PROCESSING
-  FINALIZATION
-  CLOSED
-}
-
-enum AssetStatus {
-  DISCOVERED
-  CONTACTED
-  VERIFIED
-  DISTRIBUTED
-  LOCKED
-}
-
-enum CommChannel {
-  FAX
-  MAIL
-  EMAIL
-  PORTAL
-}
-
-enum StakeholderType {
-  EXECUTOR
-  BENEFICIARY
-  ATTORNEY
-  CPA
-  INSTITUTION_REP
-}
-
-enum UserRole {
-  EXECUTOR
-  BENEFICIARY
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
-  passwordHash  String?   // Null for OAuth users
+  passwordHash  String?
   name          String
-  role          UserRole
-  state         String    // US state code (e.g., "NJ", "CA")
+  role          String    // Was Enum UserRole
+  state         String
   
   // OAuth fields
   googleId      String?   @unique
@@ -70,18 +34,15 @@ model Session {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // Security tracking
-  tokenHash     String   @unique  // SHA-256 hash of JWT token
+  tokenHash     String   @unique
   ipAddress     String
-  userAgent     String   @db.Text
-  deviceId      String?  // Browser fingerprint
+  userAgent     String   // Was @db.Text
+  deviceId      String?
   
-  // Geolocation (for suspicious activity detection)
   country       String?
   region        String?
   city          String?
   
-  // Session lifecycle
   createdAt     DateTime @default(now())
   lastActivity  DateTime @default(now())
   expiresAt     DateTime
@@ -97,18 +58,15 @@ model AuditLog {
   userId      String?
   user        User?    @relation(fields: [userId], references: [id])
   
-  // Action details
-  action      String   // "LOGIN", "VIEW_SSN", "DOWNLOAD_DOCUMENT", "UPDATE_ESTATE"
-  resource    String   // "Estate:uuid", "Document:uuid"
-  result      String   // "SUCCESS", "FAILURE", "DENIED"
+  action      String
+  resource    String
+  result      String
   
-  // Security context
   ipAddress   String
-  userAgent   String   @db.Text
+  userAgent   String   // Was @db.Text
   sessionId   String?
   
-  // Metadata
-  metadata    Json?    // Additional context (e.g., what changed)
+  metadata    String?  // SQLite doesn't support Json native type, use String or supported mapping? Actually Prisma supports Json on SQLite via text.
   timestamp   DateTime @default(now())
   
   @@index([userId])
@@ -119,23 +77,24 @@ model AuditLog {
 
 model Estate {
   id                    String         @id @default(uuid())
-  name                  String         // Estate name (e.g., "Doe Estate")
-  deceasedInfo          Json           // { name, dob, dod, addresses }
-  deceasedSSN_Encrypted String?        // AES-256 encrypted SSN
-  deceasedState         String?        // State of decedent's residence (for probate jurisdiction)
-  status                EstateStatus   @default(INITIATION)
+  name                  String
+  deceasedInfo          String         // stored as JSON string
+  deceasedSSN_Encrypted String?
+  deceasedState         String?
+  type                  String?        // SIMPLE_PROBATE, INTESTATE, TRUST_BASED, SMALL_ESTATE
+  status                String         @default("INITIATION") // Was Enum
   complexityScore       Int            @default(1)
-  metadata              Json?          // Flexible field for jurisdiction/tier-specific data
+  metadata              String?        // stored as JSON string
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
-  // User relationship
   userId          String
   user            User           @relation(fields: [userId], references: [id])
 
   stakeholders    Stakeholder[]
   assets          Asset[]
   communications  Communication[]
+  documents       Document[]
   
   @@index([userId])
 }
@@ -144,9 +103,9 @@ model Stakeholder {
   id          String          @id @default(uuid())
   estateId    String
   estate      Estate          @relation(fields: [estateId], references: [id])
-  type        StakeholderType
-  info        Json            // { name, email, phone, address, relationship }
-  permissions Json            // { accessLevel, modules: [] }
+  type        String          // Was Enum
+  info        String          // stored as JSON string
+  permissions String          // stored as JSON string
   active      Boolean         @default(true)
   createdAt   DateTime        @default(now())
 
@@ -157,12 +116,13 @@ model Asset {
   id           String      @id @default(uuid())
   estateId     String
   estate       Estate      @relation(fields: [estateId], references: [id])
-  type         String      // Brokerage, IRA, Real Estate, etc.
-  institution  String      // e.g., Fidelity, Invesco
-  status       AssetStatus @default(DISCOVERED)
-  value        Decimal?    @db.Decimal(15, 2)
-  requirements Json        // { formsNeeded: [], msgRequired: boolean, staleDateLimit: int }
-  metadata     Json?       // Dynamic institution-specific data (e.g., Fidelity account type)
+  type         String
+  institution  String
+  status       String      @default("DISCOVERED") // Was Enum
+  value        Decimal?    // SQLite supports Decimal via Prisma (mapped to String/Float)
+  requirements String      // stored as JSON string
+  metadata     String?     // stored as JSON string
+  communications Communication[]
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
@@ -173,13 +133,32 @@ model Communication {
   id          String      @id @default(uuid())
   estateId    String
   estate      Estate      @relation(fields: [estateId], references: [id])
-  channel     CommChannel
-  providerId  String?     // Tracking ID from Lob/SRFax
-  content     String      @db.Text
-  status      String      // Sent, Delivered, Failed, Replied
-  auditTrail  Json        // [{ status: 'sent', timestamp: '...' }]
-  metadata    Json?       // Escalation level, target recipient, etc.
+  channel     String      // Was Enum
+  providerId  String?
+  content     String      // Was @db.Text
+  status      String
+  auditTrail  String      // stored as JSON string
+  metadata    String?     // stored as JSON string
+  assetId     String?
+  asset       Asset?      @relation(fields: [assetId], references: [id])
   createdAt   DateTime    @default(now())
+
+  @@index([estateId])
+  @@index([assetId])
+}
+
+model Document {
+  id           String      @id @default(uuid())
+  estateId     String
+  estate       Estate      @relation(fields: [estateId], references: [id])
+  type         String      // e.g., "DEATH_CERTIFICATE", "WILL", "OTHER"
+  fileName     String
+  filePath     String
+  fileSize     Int
+  mimeType     String
+  status       String      @default("PENDING") // PENDING, EXTRACTED, VERIFIED
+  extractedData String?    // JSON string of AI-extracted data
+  uploadedAt   DateTime    @default(now())
 
   @@index([estateId])
 }

@@ -17,12 +17,14 @@ export interface RegisterData {
     name: string;
     role: 'EXECUTOR' | 'BENEFICIARY';
     state: string;
+    estateType?: string;
     googleId?: string;
 }
 
 export interface LoginData {
     email: string;
     password: string;
+    req?: any; // or Request if you can import it, but any is strictly safer to avoid circular deps if types are tricky here
 }
 
 export class AuthService {
@@ -53,9 +55,22 @@ export class AuthService {
                 name: data.name,
                 role: data.role,
                 state: data.state,
-                googleId: data.googleId
+                googleId: data.googleId || null
             }
         });
+
+        // Create default Estate if estateType is provided
+        if (data.estateType) {
+            await prisma.estate.create({
+                data: {
+                    name: `${data.name}'s Estate`,
+                    deceasedInfo: '{}',
+                    status: 'INITIATION',
+                    userId: user.id,
+                    type: data.estateType
+                }
+            });
+        }
 
         // Generate JWT token
         const token = this.generateToken(user.id, user.email, user.role);
@@ -66,7 +81,8 @@ export class AuthService {
                 email: user.email,
                 name: user.name,
                 role: user.role,
-                state: user.state
+                state: user.state,
+                estateType: data.estateType || null
             },
             token
         };
@@ -78,7 +94,8 @@ export class AuthService {
     async login(data: LoginData) {
         // Find user
         const user = await prisma.user.findUnique({
-            where: { email: data.email }
+            where: { email: data.email },
+            include: { estates: true }
         });
 
         if (!user || !user.passwordHash) {
@@ -100,7 +117,8 @@ export class AuthService {
                 email: user.email,
                 name: user.name,
                 role: user.role,
-                state: user.state
+                state: user.state,
+                estateType: user.estates[0]?.type || null
             },
             token
         };
@@ -118,7 +136,8 @@ export class AuthService {
             };
 
             const user = await prisma.user.findUnique({
-                where: { id: decoded.userId }
+                where: { id: decoded.userId },
+                include: { estates: true }
             });
 
             if (!user) {
@@ -130,7 +149,8 @@ export class AuthService {
                 email: user.email,
                 name: user.name,
                 role: user.role,
-                state: user.state
+                state: user.state,
+                estateType: user.estates[0]?.type || null
             };
         } catch (error) {
             throw new Error('Invalid token');

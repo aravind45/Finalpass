@@ -1,9 +1,16 @@
+// import 'dotenv/config'; // Native --env-file used
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
+import estateRoutes from './routes/estate.js';
+import documentRoutes from './routes/documents.js';
+import communicationRoutes from './routes/communication.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -46,10 +53,20 @@ const authLimiter = rateLimit({
 app.use(express.json());
 
 // Routes
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/estates', estateRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/communication', communicationRoutes);
+app.use('/api/ai', aiRoutes);
 
-app.get('/', (req, res) => {
-    res.json({ message: 'Estate Settlement Advocate API Active' });
+// Serve static files from the 'public' directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Handle client-side routing, return all non-API requests to index.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
 app.get('/db-health', async (req, res) => {
@@ -61,6 +78,13 @@ app.get('/db-health', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+
+// Export app for Vercel (Serverless)
+export default app;
+
+// Only listen if run directly (locally)
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}

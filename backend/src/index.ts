@@ -12,6 +12,7 @@ import documentRoutes from './routes/documents.js';
 import communicationRoutes from './routes/communication.js';
 import aiRoutes from './routes/aiRoutes.js';
 import assetCommunicationRoutes from './routes/assetCommunication.js';
+import formRoutes from './routes/forms.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -60,6 +61,7 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/assets', assetCommunicationRoutes);
+app.use('/api/forms', formRoutes);
 
 // Health check endpoint
 app.get('/db-health', async (req, res) => {

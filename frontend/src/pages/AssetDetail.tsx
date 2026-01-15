@@ -9,9 +9,12 @@ import {
     CheckCircle2,
     Clock,
     MessageSquare,
-    Plus
+    Plus,
+    FileText,
+    Send
 } from 'lucide-react';
 import CommunicationLog from '../components/CommunicationLog';
+import SendFaxModal from '../components/SendFaxModal';
 
 interface Asset {
     id: string;
@@ -40,6 +43,8 @@ const AssetDetail = () => {
     const [nextActions, setNextActions] = useState<NextAction[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddComm, setShowAddComm] = useState(false);
+    const [showSendFax, setShowSendFax] = useState(false);
+    const [forms, setForms] = useState<any[]>([]);
 
     useEffect(() => {
         if (assetId) {
@@ -47,6 +52,12 @@ const AssetDetail = () => {
             fetchNextActions();
         }
     }, [assetId]);
+
+    useEffect(() => {
+        if (asset) {
+            fetchForms();
+        }
+    }, [asset]);
 
     const fetchAssetDetails = async () => {
         try {
@@ -80,6 +91,22 @@ const AssetDetail = () => {
             }
         } catch (error) {
             console.error('Failed to fetch next actions:', error);
+        }
+    };
+
+    const fetchForms = async () => {
+        if (!asset) return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/forms/institution/${encodeURIComponent(asset.institution)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (data.success) {
+                setForms(data.forms);
+            }
+        } catch (error) {
+            console.error('Failed to fetch forms:', error);
         }
     };
 
@@ -255,15 +282,85 @@ const AssetDetail = () => {
                     </motion.div>
                 </div>
 
+                {/* Forms Library */}
+                {forms.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="card mb-5"
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)' }}>
+                            <div>
+                                <h3 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 600, marginBottom: 'var(--space-xs)', color: 'var(--color-text-primary)' }}>
+                                    Forms & Documents
+                                </h3>
+                                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 0 }}>
+                                    Fill and fax forms directly to {asset.institution}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowSendFax(true)}
+                                className="btn btn-primary"
+                            >
+                                <Send style={{ width: '1rem', height: '1rem' }} />
+                                Send Fax
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--space-md)' }}>
+                            {forms.map((form: any) => (
+                                <div
+                                    key={form.id}
+                                    style={{
+                                        padding: 'var(--space-lg)',
+                                        background: 'var(--color-bg-tertiary)',
+                                        borderRadius: 'var(--radius-lg)',
+                                        border: '1px solid var(--color-border-light)'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'start', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
+                                        <FileText style={{ width: '1.25rem', height: '1.25rem', color: 'var(--color-accent)', flexShrink: 0 }} />
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: 'var(--font-size-base)', fontWeight: 600, marginBottom: 'var(--space-xs)', color: 'var(--color-text-primary)' }}>
+                                                {form.name}
+                                            </div>
+                                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)' }}>
+                                                {form.description}
+                                            </div>
+                                            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>
+                                                {form.pageCount} pages • ${(form.pageCount * 0.07).toFixed(2)} to fax
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
                 {/* Communication Log */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
+                    transition={{ delay: 0.5 }}
                     className="card"
                 >
                     <CommunicationLog assetId={asset.id} institution={asset.institution} />
                 </motion.div>
+
+                {/* Send Fax Modal */}
+                {showSendFax && (
+                    <SendFaxModal
+                        assetId={asset.id}
+                        institution={asset.institution}
+                        onClose={() => setShowSendFax(false)}
+                        onSuccess={() => {
+                            setShowSendFax(false);
+                            // Optionally refresh data
+                        }}
+                    />
+                )}
             </div>
         </div>
     );

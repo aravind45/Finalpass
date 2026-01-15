@@ -1,0 +1,122 @@
+{
+  "forms": [
+    {
+      "id": "fidelity_estate_packet",
+      "name": "Fidelity Estate Settlement Packet",
+      "institution": "Fidelity",
+      "description": "Complete packet for settling Fidelity accounts",
+      "fileName": "fidelity-estate-settlement-packet.pdf",
+      "pageCount": 8,
+      "fields": [
+        {
+          "id": "deceased_name",
+          "label": "Deceased's Full Name",
+          "type": "text",
+          "page": 1,
+          "required": true,
+          "estateField": "deceasedInfo.fullName"
+        },
+        {
+          "id": "deceased_ssn",
+          "label": "Deceased's Social Security Number",
+          "type": "text",
+          "page": 1,
+          "required": true,
+          "estateField": "deceasedSSN"
+        },
+        {
+          "id": "date_of_death",
+          "label": "Date of Death",
+          "type": "date",
+          "page": 1,
+          "required": true,
+          "estateField": "deceasedInfo.dateOfDeath"
+        },
+        {
+          "id": "executor_name",
+          "label": "Executor's Full Name",
+          "type": "text",
+          "page": 1,
+          "required": true,
+          "estateField": "user.name"
+        },
+        {
+          "id": "executor_address",
+          "label": "Executor's Address",
+          "type": "text",
+          "page": 1,
+          "required": true,
+          "estateField": "user.address"
+        },
+        {
+          "id": "executor_phone",
+          "label": "Executor's Phone",
+          "type": "text",
+          "page": 1,
+          "required": true,
+          "estateField": "user.phone"
+        },
+        {
+          "id": "executor_email",
+          "label": "Executor's Email",
+          "type": "text",
+          "page": 1,
+          "required": true,
+          "estateField": "user.email"
+        },
+        {
+          "id": "account_numbers",
+          "label": "Account Numbers",
+          "type": "textarea",
+          "page": 2,
+          "required": false,
+          "estateField": "asset.accountNumber"
+        }
+      ],
+      "faxInfo": {
+        "recipientName": "Fidelity Estate Services",
+        "recipientFax": "1-800-544-0003",
+        "coverPageRequired": true
+      }
+    },
+    {
+      "id": "fidelity_transfer_request",
+      "name": "Fidelity Account Transfer Request",
+      "institution": "Fidelity",
+      "description": "Request to transfer or close accounts",
+      "fileName": "fidelity-transfer-request.pdf",
+      "pageCount": 3,
+      "fields": [
+        {
+          "id": "account_number",
+          "label": "Account Number",
+          "type": "text",
+          "page": 1,
+          "required": true,
+          "estateField": "asset.accountNumber"
+        },
+        {
+          "id": "account_type",
+          "label": "Account Type",
+          "type": "select",
+          "options": ["Individual", "Joint", "IRA", "401(k)", "Trust"],
+          "page": 1,
+          "required": true,
+          "estateField": "asset.type"
+        },
+        {
+          "id": "transfer_to",
+          "label": "Transfer To",
+          "type": "text",
+          "page": 2,
+          "required": false
+        }
+      ],
+      "faxInfo": {
+        "recipientName": "Fidelity Estate Services",
+        "recipientFax": "1-800-544-0003",
+        "coverPageRequired": true
+      }
+    }
+  ]
+}

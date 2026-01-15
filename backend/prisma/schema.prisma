@@ -242,3 +242,45 @@ model Document {
 
   @@index([estateId])
 }
+
+// New: Fax Tracking
+model Fax {
+  id              String    @id @default(uuid())
+  assetId         String
+  
+  // Fax details
+  recipientName   String
+  recipientFax    String
+  senderName      String
+  senderFax       String?
+  
+  // Document info
+  documentType    String    // e.g., "fidelity_estate_packet", "death_certificate"
+  documentName    String
+  filePath        String
+  pageCount       Int
+  
+  // Status tracking
+  status          String    @default("pending") // pending, sending, sent, failed, delivered
+  providerFaxId   String?   // PamFax fax ID
+  providerStatus  String?   // Provider-specific status
+  
+  // Timestamps
+  sentAt          DateTime?
+  deliveredAt     DateTime?
+  failedAt        DateTime?
+  errorMessage    String?
+  
+  // Cost tracking
+  cost            Decimal?
+  
+  // Metadata
+  metadata        String?   // JSON string for additional data
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([assetId])
+  @@index([status])
+  @@index([createdAt])
+}

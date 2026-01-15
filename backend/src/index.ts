@@ -11,6 +11,7 @@ import estateRoutes from './routes/estate.js';
 import documentRoutes from './routes/documents.js';
 import communicationRoutes from './routes/communication.js';
 import aiRoutes from './routes/aiRoutes.js';
+import assetCommunicationRoutes from './routes/assetCommunication.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -58,6 +59,7 @@ app.use('/api/estates', estateRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/assets', assetCommunicationRoutes);
 
 // Serve static files from the 'public' directory
 const __filename = fileURLToPath(import.meta.url);

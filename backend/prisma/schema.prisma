@@ -24,6 +24,8 @@ model User {
   estates       Estate[]
   sessions      Session[]
   auditLogs     AuditLog[]
+  assetCommunications AssetCommunication[]
+  notifications Notification[]
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -95,6 +97,7 @@ model Estate {
   assets          Asset[]
   communications  Communication[]
   documents       Document[]
+  notifications   Notification[]
   
   @@index([userId])
 }
@@ -123,6 +126,8 @@ model Asset {
   requirements String      // stored as JSON string
   metadata     String?     // stored as JSON string
   communications Communication[]
+  assetCommunications AssetCommunication[]
+  escalations  Escalation[]
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
@@ -145,6 +150,81 @@ model Communication {
 
   @@index([estateId])
   @@index([assetId])
+}
+
+// New: Asset Communication Tracking (Core Feature)
+model AssetCommunication {
+  id              String    @id @default(uuid())
+  assetId         String
+  asset           Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  date            DateTime  @default(now())
+  type            String    // initial_contact, follow_up, escalation, response
+  method          String    // email, phone, fax, mail, portal
+  direction       String    // inbound, outbound
+  
+  subject         String?
+  content         String    // Communication content/notes
+  response        String?   // Response received
+  responseDate    DateTime?
+  
+  nextActionDate  DateTime? // When to follow up
+  nextActionType  String?   // What action to take next
+  
+  createdById     String
+  createdBy       User      @relation(fields: [createdById], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([assetId])
+  @@index([date])
+  @@index([nextActionDate])
+}
+
+// New: Escalation Tracking
+model Escalation {
+  id              String    @id @default(uuid())
+  assetId         String
+  asset           Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  level           Int       // 1=follow-up, 2=supervisor, 3=regulatory
+  triggeredDate   DateTime  @default(now())
+  reason          String
+  status          String    @default("pending") // pending, sent, resolved, cancelled
+  
+  templateUsed    String?
+  sentDate        DateTime?
+  resolvedDate    DateTime?
+  resolution      String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([assetId])
+  @@index([status])
+  @@index([triggeredDate])
+}
+
+// New: Notifications
+model Notification {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  estateId    String?
+  estate      Estate?   @relation(fields: [estateId], references: [id], onDelete: Cascade)
+  
+  type        String    // escalation_due, response_received, document_needed, etc.
+  title       String
+  message     String
+  
+  read        Boolean   @default(false)
+  actionUrl   String?
+  
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
 }
 
 model Document {

@@ -196,7 +196,11 @@ const Dashboard = () => {
                                             </p>
                                         </div>
 
-                                        <button className="btn-secondary" style={{ padding: '0.25rem 0.5rem' }}>
+                                        <button 
+                                            className="btn-secondary" 
+                                            style={{ padding: '0.25rem 0.5rem' }}
+                                            onClick={() => navigate(`/assets/${asset.id}`)}
+                                        >
                                             <ChevronRight className="w-5 h-5" />
                                         </button>
                                     </div>

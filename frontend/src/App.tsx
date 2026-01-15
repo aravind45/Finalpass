@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Intake from './pages/Intake';
 import Documents from './pages/Documents';
 import Assets from './pages/Assets';
+import AssetDetail from './pages/AssetDetail';
 import Checklist from './pages/Checklist';
 import Communications from './pages/Communications';
 import Family from './pages/Family';
@@ -26,6 +27,7 @@ function App() {
           <Route path="/intake" element={<Intake />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/assets" element={<Assets />} />
+          <Route path="/assets/:assetId" element={<AssetDetail />} />
           <Route path="/checklist" element={<Checklist />} />
           <Route path="/communications" element={<Communications />} />
           <Route path="/family" element={<Family />} />

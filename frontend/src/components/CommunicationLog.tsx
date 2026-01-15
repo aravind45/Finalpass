@@ -6,14 +6,11 @@ import {
     Mail,
     Send,
     FileText,
-    AlertCircle,
-    CheckCircle2,
-    Clock,
     Plus,
-    Edit,
-    Trash2,
     ArrowUp,
-    ArrowDown
+    ArrowDown,
+    X,
+    CheckCircle2
 } from 'lucide-react';
 
 interface Communication {
@@ -85,165 +82,179 @@ const CommunicationLog = ({ assetId, institution }: CommunicationLogProps) => {
     };
 
     const getMethodIcon = (method: string) => {
+        const iconProps = { style: { width: '1rem', height: '1rem' } };
         switch (method) {
-            case 'email': return <Mail className="w-4 h-4" />;
-            case 'phone': return <Phone className="w-4 h-4" />;
-            case 'fax': return <Send className="w-4 h-4" />;
-            case 'mail': return <FileText className="w-4 h-4" />;
-            case 'portal': return <MessageSquare className="w-4 h-4" />;
-            default: return <MessageSquare className="w-4 h-4" />;
+            case 'email': return <Mail {...iconProps} />;
+            case 'phone': return <Phone {...iconProps} />;
+            case 'fax': return <Send {...iconProps} />;
+            case 'mail': return <FileText {...iconProps} />;
+            case 'portal': return <MessageSquare {...iconProps} />;
+            default: return <MessageSquare {...iconProps} />;
         }
     };
 
-    const getTypeColor = (type: string) => {
-        switch (type) {
-            case 'initial_contact': return 'var(--accent-blue)';
-            case 'follow_up': return 'var(--accent-orange)';
-            case 'escalation': return '#ef4444';
-            case 'response': return 'var(--accent-sage)';
-            default: return '#64748b';
-        }
+    const getTypeLabel = (type: string) => {
+        const labels: Record<string, string> = {
+            'initial_contact': 'Initial Contact',
+            'follow_up': 'Follow Up',
+            'escalation': 'Escalation',
+            'response': 'Response Received'
+        };
+        return labels[type] || type;
     };
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
+        const now = new Date();
+        const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) return 'Today';
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 7) return `${diffDays} days ago`;
+        
         return date.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
         });
     };
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center p-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="loading">
+                <div className="spinner"></div>
             </div>
         );
     }
 
     return (
-        <div className="communication-log">
-            {/* Stats Summary */}
-            {stats && (
-                <div className="grid grid-cols-4 gap-4 mb-6">
-                    <div className="glass-card p-4">
-                        <div className="text-sm text-gray-600 mb-1">Total Communications</div>
-                        <div className="text-2xl font-bold">{stats.totalCommunications}</div>
-                    </div>
-                    <div className="glass-card p-4">
-                        <div className="text-sm text-gray-600 mb-1">Response Rate</div>
-                        <div className="text-2xl font-bold">{stats.responseRate.toFixed(0)}%</div>
-                    </div>
-                    <div className="glass-card p-4">
-                        <div className="text-sm text-gray-600 mb-1">Days Since First Contact</div>
-                        <div className="text-2xl font-bold">{stats.daysSinceFirstContact}</div>
-                    </div>
-                    <div className="glass-card p-4">
-                        <div className="text-sm text-gray-600 mb-1">Days Since Last Contact</div>
-                        <div className="text-2xl font-bold text-orange-600">{stats.daysSinceLastContact}</div>
-                    </div>
+        <div>
+            {/* Header with Stats */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)' }}>
+                <div>
+                    <h3 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 600, marginBottom: 'var(--space-xs)', color: 'var(--color-text-primary)' }}>
+                        Communication History
+                    </h3>
+                    {stats && (
+                        <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 0 }}>
+                            {stats.totalCommunications} {stats.totalCommunications === 1 ? 'interaction' : 'interactions'} • 
+                            {stats.daysSinceLastContact === 0 ? ' Last contact today' : ` ${stats.daysSinceLastContact} days since last contact`}
+                        </p>
+                    )}
                 </div>
-            )}
-
-            {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Communication History</h3>
                 <button
                     onClick={() => setShowAddModal(true)}
-                    className="btn-primary flex items-center gap-2"
+                    className="btn btn-primary"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus style={{ width: '1rem', height: '1rem' }} />
                     Log Communication
                 </button>
             </div>
 
             {/* Communications List */}
             {communications.length === 0 ? (
-                <div className="glass-card p-8 text-center">
-                    <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-600 mb-4">No communications logged yet</p>
+                <div className="empty-state">
+                    <MessageSquare className="empty-state-icon" />
+                    <div className="empty-state-title">No communications yet</div>
+                    <p className="empty-state-description">
+                        Start by logging your first interaction with {institution}. 
+                        This helps track progress and ensures nothing falls through the cracks.
+                    </p>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="btn-primary"
+                        className="btn btn-primary"
                     >
                         Log First Communication
                     </button>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
                     {communications.map((comm, index) => (
                         <motion.div
                             key={comm.id}
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="glass-card p-4"
                             style={{
-                                borderLeft: `4px solid ${getTypeColor(comm.type)}`
+                                padding: 'var(--space-lg)',
+                                background: 'var(--color-bg-tertiary)',
+                                borderRadius: 'var(--radius-lg)',
+                                border: '1px solid var(--color-border-light)'
                             }}
                         >
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-3">
-                                    <div
-                                        className="p-2 rounded-lg"
-                                        style={{ background: `${getTypeColor(comm.type)}20` }}
-                                    >
+                            {/* Header */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 'var(--space-sm)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                                    <div style={{
+                                        padding: 'var(--space-xs)',
+                                        background: 'var(--color-bg-primary)',
+                                        borderRadius: 'var(--radius-md)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
                                         {getMethodIcon(comm.method)}
                                     </div>
                                     <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-semibold capitalize">
-                                                {comm.type.replace('_', ' ')}
-                                            </span>
-                                            <span className="text-sm text-gray-500">via {comm.method}</span>
+                                        <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                                            {getTypeLabel(comm.type)}
+                                        </div>
+                                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>
+                                            {formatDate(comm.date)} • {comm.method}
                                             {comm.direction === 'outbound' ? (
-                                                <ArrowUp className="w-4 h-4 text-blue-500" />
+                                                <ArrowUp style={{ width: '0.75rem', height: '0.75rem', display: 'inline', marginLeft: '0.25rem' }} />
                                             ) : (
-                                                <ArrowDown className="w-4 h-4 text-green-500" />
+                                                <ArrowDown style={{ width: '0.75rem', height: '0.75rem', display: 'inline', marginLeft: '0.25rem' }} />
                                             )}
                                         </div>
-                                        <div className="text-sm text-gray-600">
-                                            {formatDate(comm.date)} • by {comm.createdBy.name}
-                                        </div>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* Subject */}
                             {comm.subject && (
-                                <div className="mb-2">
-                                    <span className="font-medium">Subject: </span>
-                                    <span>{comm.subject}</span>
+                                <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-xs)', color: 'var(--color-text-primary)' }}>
+                                    {comm.subject}
                                 </div>
                             )}
 
-                            <div className="mb-3">
-                                <div className="text-sm font-medium text-gray-700 mb-1">Content:</div>
-                                <div className="text-gray-800 whitespace-pre-wrap">{comm.content}</div>
+                            {/* Content */}
+                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: comm.response ? 'var(--space-sm)' : 0, lineHeight: 'var(--line-height-relaxed)' }}>
+                                {comm.content}
                             </div>
 
+                            {/* Response */}
                             {comm.response && (
-                                <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                        <span className="text-sm font-medium text-green-800">
-                                            Response Received {comm.responseDate && `on ${formatDate(comm.responseDate)}`}
+                                <div style={{
+                                    marginTop: 'var(--space-sm)',
+                                    padding: 'var(--space-md)',
+                                    background: 'var(--color-success-soft)',
+                                    borderRadius: 'var(--radius-md)',
+                                    borderLeft: '3px solid var(--color-success)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', marginBottom: 'var(--space-xs)' }}>
+                                        <CheckCircle2 style={{ width: '1rem', height: '1rem', color: 'var(--color-success)' }} />
+                                        <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--color-success)' }}>
+                                            Response {comm.responseDate && `• ${formatDate(comm.responseDate)}`}
                                         </span>
                                     </div>
-                                    <div className="text-gray-800 whitespace-pre-wrap">{comm.response}</div>
+                                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', lineHeight: 'var(--line-height-relaxed)' }}>
+                                        {comm.response}
+                                    </div>
                                 </div>
                             )}
 
+                            {/* Next Action */}
                             {comm.nextActionDate && (
-                                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-4 h-4 text-blue-600" />
-                                        <span className="text-sm font-medium text-blue-800">
-                                            Next Action: {comm.nextActionType || 'Follow up'} by {formatDate(comm.nextActionDate)}
-                                        </span>
-                                    </div>
+                                <div style={{
+                                    marginTop: 'var(--space-sm)',
+                                    padding: 'var(--space-sm)',
+                                    background: 'var(--color-accent-soft)',
+                                    borderRadius: 'var(--radius-md)',
+                                    fontSize: 'var(--font-size-xs)',
+                                    color: 'var(--color-text-primary)'
+                                }}>
+                                    <strong>Next:</strong> {comm.nextActionType || 'Follow up'} by {formatDate(comm.nextActionDate)}
                                 </div>
                             )}
                         </motion.div>
@@ -330,41 +341,69 @@ const AddCommunicationModal = ({ assetId, institution, onClose, onSuccess }: Add
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 50,
+                padding: 'var(--space-xl)'
+            }}
             onClick={onClose}
         >
             <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                exit={{ scale: 0.95, opacity: 0 }}
+                style={{
+                    background: 'var(--color-bg-primary)',
+                    borderRadius: 'var(--radius-xl)',
+                    padding: 'var(--space-xl)',
+                    maxWidth: '600px',
+                    width: '100%',
+                    maxHeight: '90vh',
+                    overflowY: 'auto'
+                }}
                 onClick={(e) => e.stopPropagation()}
             >
-                <h2 className="text-2xl font-bold mb-4">Log Communication with {institution}</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)' }}>
+                    <h2 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, margin: 0, color: 'var(--color-text-primary)' }}>
+                        Log Communication
+                    </h2>
+                    <button onClick={onClose} className="btn btn-ghost" style={{ padding: 'var(--space-xs)' }}>
+                        <X style={{ width: '1.25rem', height: '1.25rem' }} />
+                    </button>
+                </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Type</label>
+                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>
+                    Recording your interactions with {institution} helps track progress and ensures timely follow-ups.
+                </p>
+
+                <form onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-2 gap-md mb-4">
+                        <div className="form-group">
+                            <label className="form-label">Type</label>
                             <select
                                 value={formData.type}
                                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                className="w-full p-2 border rounded-lg"
+                                className="form-select"
                                 required
                             >
                                 <option value="initial_contact">Initial Contact</option>
                                 <option value="follow_up">Follow Up</option>
                                 <option value="escalation">Escalation</option>
-                                <option value="response">Response</option>
+                                <option value="response">Response Received</option>
                             </select>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Method</label>
+                        <div className="form-group">
+                            <label className="form-label">Method</label>
                             <select
                                 value={formData.method}
                                 onChange={(e) => setFormData({ ...formData, method: e.target.value })}
-                                className="w-full p-2 border rounded-lg"
+                                className="form-select"
                                 required
                             >
                                 <option value="email">Email</option>
@@ -376,113 +415,103 @@ const AddCommunicationModal = ({ assetId, institution, onClose, onSuccess }: Add
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Direction</label>
-                        <div className="flex gap-4">
-                            <label className="flex items-center">
+                    <div className="form-group">
+                        <label className="form-label">Direction</label>
+                        <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', cursor: 'pointer' }}>
                                 <input
                                     type="radio"
                                     value="outbound"
                                     checked={formData.direction === 'outbound'}
                                     onChange={(e) => setFormData({ ...formData, direction: e.target.value })}
-                                    className="mr-2"
                                 />
-                                Outbound (I contacted them)
+                                <span style={{ fontSize: 'var(--font-size-sm)' }}>I contacted them</span>
                             </label>
-                            <label className="flex items-center">
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', cursor: 'pointer' }}>
                                 <input
                                     type="radio"
                                     value="inbound"
                                     checked={formData.direction === 'inbound'}
                                     onChange={(e) => setFormData({ ...formData, direction: e.target.value })}
-                                    className="mr-2"
                                 />
-                                Inbound (They contacted me)
+                                <span style={{ fontSize: 'var(--font-size-sm)' }}>They contacted me</span>
                             </label>
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Subject (optional)</label>
+                    <div className="form-group">
+                        <label className="form-label">Subject (optional)</label>
                         <input
                             type="text"
                             value={formData.subject}
                             onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                            className="w-full p-2 border rounded-lg"
-                            placeholder="e.g., Estate settlement inquiry"
+                            className="form-input"
+                            placeholder="Brief description"
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Content *</label>
+                    <div className="form-group">
+                        <label className="form-label">What happened? *</label>
                         <textarea
                             value={formData.content}
                             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                            className="w-full p-2 border rounded-lg"
+                            className="form-textarea"
                             rows={4}
-                            placeholder="What did you say or what was discussed?"
+                            placeholder="Describe what was discussed or what you sent..."
                             required
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Response (if received)</label>
-                        <textarea
-                            value={formData.response}
-                            onChange={(e) => setFormData({ ...formData, response: e.target.value })}
-                            className="w-full p-2 border rounded-lg"
-                            rows={3}
-                            placeholder="What did they say?"
-                        />
-                    </div>
-
-                    {formData.response && (
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Response Date</label>
-                            <input
-                                type="datetime-local"
-                                value={formData.responseDate}
-                                onChange={(e) => setFormData({ ...formData, responseDate: e.target.value })}
-                                className="w-full p-2 border rounded-lg"
+                    {formData.direction === 'inbound' && (
+                        <div className="form-group">
+                            <label className="form-label">Their Response</label>
+                            <textarea
+                                value={formData.response}
+                                onChange={(e) => setFormData({ ...formData, response: e.target.value })}
+                                className="form-textarea"
+                                rows={3}
+                                placeholder="What did they say?"
                             />
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Next Action Date</label>
+                    <div className="grid grid-cols-2 gap-md">
+                        <div className="form-group">
+                            <label className="form-label">Follow up by</label>
                             <input
                                 type="date"
                                 value={formData.nextActionDate}
                                 onChange={(e) => setFormData({ ...formData, nextActionDate: e.target.value })}
-                                className="w-full p-2 border rounded-lg"
+                                className="form-input"
                             />
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Next Action Type</label>
+                        <div className="form-group">
+                            <label className="form-label">Next action</label>
                             <input
                                 type="text"
                                 value={formData.nextActionType}
                                 onChange={(e) => setFormData({ ...formData, nextActionType: e.target.value })}
-                                className="w-full p-2 border rounded-lg"
-                                placeholder="e.g., Follow up call"
+                                className="form-input"
+                                placeholder="e.g., Call for update"
                             />
                         </div>
                     </div>
 
-                    <div className="flex gap-3 pt-4">
+                    <div style={{ display: 'flex', gap: 'var(--space-md)', marginTop: 'var(--space-lg)' }}>
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="btn-primary flex-1"
+                            className="btn btn-primary"
+                            style={{ flex: 1 }}
                         >
-                            {submitting ? 'Logging...' : 'Log Communication'}
+                            {submitting ? 'Saving...' : 'Save Communication'}
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="btn-secondary flex-1"
+                            className="btn btn-secondary"
+                            style={{ flex: 1 }}
                         >
                             Cancel
                         </button>

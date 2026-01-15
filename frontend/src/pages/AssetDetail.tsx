@@ -8,7 +8,8 @@ import {
     AlertCircle,
     CheckCircle2,
     Clock,
-    TrendingUp
+    MessageSquare,
+    Plus
 } from 'lucide-react';
 import CommunicationLog from '../components/CommunicationLog';
 
@@ -38,6 +39,7 @@ const AssetDetail = () => {
     const [asset, setAsset] = useState<Asset | null>(null);
     const [nextActions, setNextActions] = useState<NextAction[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showAddComm, setShowAddComm] = useState(false);
 
     useEffect(() => {
         if (assetId) {
@@ -81,38 +83,32 @@ const AssetDetail = () => {
         }
     };
 
-    const getPriorityColor = (priority: string) => {
-        switch (priority) {
-            case 'high': return 'var(--accent-orange)';
-            case 'medium': return 'var(--accent-blue)';
-            case 'low': return 'var(--accent-sage)';
-            default: return '#64748b';
-        }
-    };
-
     const getPriorityIcon = (priority: string) => {
         switch (priority) {
-            case 'high': return <AlertCircle className="w-5 h-5" />;
-            case 'medium': return <Clock className="w-5 h-5" />;
-            case 'low': return <CheckCircle2 className="w-5 h-5" />;
-            default: return <Clock className="w-5 h-5" />;
+            case 'high': return <AlertCircle style={{ width: '1.25rem', height: '1.25rem' }} />;
+            case 'medium': return <Clock style={{ width: '1.25rem', height: '1.25rem' }} />;
+            case 'low': return <CheckCircle2 style={{ width: '1.25rem', height: '1.25rem' }} />;
+            default: return <Clock style={{ width: '1.25rem', height: '1.25rem' }} />;
         }
     };
 
     if (loading) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="loading">
+                <div className="spinner"></div>
             </div>
         );
     }
 
     if (!asset) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold mb-4">Asset Not Found</h2>
-                    <button onClick={() => navigate('/dashboard')} className="btn-primary">
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-xl)' }}>
+                <div className="empty-state">
+                    <div className="empty-state-title">Asset Not Found</div>
+                    <p className="empty-state-description">
+                        We couldn't find this asset. It may have been removed or you may not have access to it.
+                    </p>
+                    <button onClick={() => navigate('/dashboard')} className="btn btn-primary">
                         Return to Dashboard
                     </button>
                 </div>
@@ -121,37 +117,51 @@ const AssetDetail = () => {
     }
 
     const metadata = asset.metadata ? JSON.parse(asset.metadata) : {};
-    const requirements = asset.requirements ? JSON.parse(asset.requirements) : {};
+    const statusInfo = {
+        'CONTACTED': { label: 'In Progress', color: 'var(--color-accent)' },
+        'DISTRIBUTED': { label: 'Complete', color: 'var(--color-success)' },
+        'Processing': { label: 'Processing', color: 'var(--color-warning)' }
+    }[asset.status] || { label: asset.status, color: 'var(--color-text-muted)' };
 
     return (
         <div style={{
             minHeight: '100vh',
-            padding: '2rem',
-            background: 'linear-gradient(135deg, #fdfcf8 0%, #fff7ed 100%)'
+            padding: 'var(--space-xl)',
+            background: 'var(--color-bg-secondary)'
         }}>
             <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    style={{ marginBottom: '2rem' }}
+                    style={{ marginBottom: 'var(--space-xl)' }}
                 >
                     <button
                         onClick={() => navigate('/dashboard')}
-                        className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4"
+                        className="btn btn-ghost mb-3"
+                        style={{ padding: 'var(--space-xs) var(--space-sm)' }}
                     >
-                        <ArrowLeft className="w-4 h-4" />
+                        <ArrowLeft style={{ width: '1rem', height: '1rem' }} />
                         Back to Dashboard
                     </button>
 
-                    <div className="flex items-start justify-between">
+                    <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between' }}>
                         <div>
-                            <h1 className="text-3xl font-bold mb-2">{asset.institution}</h1>
-                            <p className="text-gray-600 text-lg">{asset.type}</p>
+                            <h1 style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, marginBottom: 'var(--space-xs)', color: 'var(--color-text-primary)' }}>
+                                {asset.institution}
+                            </h1>
+                            <p style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)' }}>
+                                {asset.type}
+                            </p>
+                            <span className="badge badge-info">
+                                {statusInfo.label}
+                            </span>
                         </div>
-                        <div className="text-right">
-                            <div className="text-sm text-gray-600 mb-1">Asset Value</div>
-                            <div className="text-3xl font-bold text-blue-600">
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-xs)' }}>
+                                Asset Value
+                            </div>
+                            <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                                 ${parseFloat(asset.value as any).toLocaleString()}
                             </div>
                         </div>
@@ -163,71 +173,64 @@ const AssetDetail = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-6"
+                        className="alert alert-warning mb-5"
                     >
-                        <div className="glass-card p-6 border-l-4" style={{ borderLeftColor: getPriorityColor(nextActions[0].priority) }}>
-                            <div className="flex items-start gap-4">
-                                <div
-                                    className="p-3 rounded-lg"
-                                    style={{ background: `${getPriorityColor(nextActions[0].priority)}20` }}
-                                >
-                                    {getPriorityIcon(nextActions[0].priority)}
+                        {getPriorityIcon(nextActions[0].priority)}
+                        <div className="alert-content">
+                            <div className="alert-title">Action Recommended</div>
+                            {nextActions.map((action, index) => (
+                                <div key={index} style={{ marginBottom: index < nextActions.length - 1 ? 'var(--space-sm)' : 0 }}>
+                                    <p style={{ marginBottom: 'var(--space-xs)' }}>{action.message}</p>
+                                    <p style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 0 }}>
+                                        Suggested: {action.suggestedAction}
+                                    </p>
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="text-lg font-semibold mb-2">Action Required</h3>
-                                    {nextActions.map((action, index) => (
-                                        <div key={index} className="mb-3 last:mb-0">
-                                            <p className="text-gray-800 mb-1">{action.message}</p>
-                                            <p className="text-sm font-medium" style={{ color: getPriorityColor(action.priority) }}>
-                                                Suggested: {action.suggestedAction}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </motion.div>
                 )}
 
-                {/* Asset Details Grid */}
-                <div className="grid grid-cols-3 gap-6 mb-6">
+                {/* Quick Stats */}
+                <div className="grid grid-cols-3 mb-5">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="glass-card p-6"
+                        className="card card-compact"
                     >
-                        <div className="flex items-center gap-3 mb-3">
-                            <Building2 className="w-5 h-5 text-blue-500" />
-                            <h3 className="font-semibold">Institution</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
+                            <Building2 style={{ width: '1.25rem', height: '1.25rem', color: 'var(--color-accent)' }} />
+                            <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                                Institution
+                            </span>
                         </div>
-                        <p className="text-gray-800">{asset.institution}</p>
-                        <p className="text-sm text-gray-600 mt-1">{asset.type}</p>
+                        <div style={{ fontSize: 'var(--font-size-base)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                            {asset.institution}
+                        </div>
+                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                            {asset.type}
+                        </div>
                     </motion.div>
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="glass-card p-6"
+                        className="card card-compact"
                     >
-                        <div className="flex items-center gap-3 mb-3">
-                            <TrendingUp className="w-5 h-5 text-green-500" />
-                            <h3 className="font-semibold">Status</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
+                            <MessageSquare style={{ width: '1.25rem', height: '1.25rem', color: 'var(--color-accent)' }} />
+                            <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                                Status
+                            </span>
                         </div>
-                        <span
-                            className="inline-block px-3 py-1 rounded-full text-sm font-semibold"
-                            style={{
-                                background: asset.status === 'DISTRIBUTED' ? 'var(--accent-sage-soft)' : 'var(--accent-orange-soft)',
-                                color: asset.status === 'DISTRIBUTED' ? 'var(--accent-sage)' : 'var(--accent-orange)'
-                            }}
-                        >
-                            {asset.status}
-                        </span>
+                        <div style={{ fontSize: 'var(--font-size-base)', fontWeight: 600, color: statusInfo.color }}>
+                            {statusInfo.label}
+                        </div>
                         {metadata.lastContact && (
-                            <p className="text-sm text-gray-600 mt-2">
+                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
                                 Last contact: {new Date(metadata.lastContact).toLocaleDateString()}
-                            </p>
+                            </div>
                         )}
                     </motion.div>
 
@@ -235,16 +238,20 @@ const AssetDetail = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="glass-card p-6"
+                        className="card card-compact"
                     >
-                        <div className="flex items-center gap-3 mb-3">
-                            <DollarSign className="w-5 h-5 text-emerald-500" />
-                            <h3 className="font-semibold">Value</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
+                            <DollarSign style={{ width: '1.25rem', height: '1.25rem', color: 'var(--color-success)' }} />
+                            <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                                Value
+                            </span>
                         </div>
-                        <p className="text-2xl font-bold text-emerald-600">
+                        <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--color-success)' }}>
                             ${parseFloat(asset.value as any).toLocaleString()}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">As of date of death</p>
+                        </div>
+                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                            As of date of death
+                        </div>
                     </motion.div>
                 </div>
 
@@ -253,7 +260,7 @@ const AssetDetail = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="glass-card p-6"
+                    className="card"
                 >
                     <CommunicationLog assetId={asset.id} institution={asset.institution} />
                 </motion.div>

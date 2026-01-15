@@ -61,16 +61,7 @@ app.use('/api/communication', communicationRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/assets', assetCommunicationRoutes);
 
-// Serve static files from the 'public' directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Handle client-side routing, return all non-API requests to index.html
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
-
+// Health check endpoint
 app.get('/db-health', async (req, res) => {
     try {
         const estateCount = await prisma.estate.count();
@@ -79,6 +70,11 @@ app.get('/db-health', async (req, res) => {
         res.status(500).json({ status: 'error', message: (err as Error).message });
     }
 });
+
+// Serve static files from the 'public' directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, '../public')));
 
 
 // Export app for Vercel (Serverless)

@@ -42,12 +42,22 @@ const CommunicationLog = ({ assetId, institution }: CommunicationLogProps) => {
     const [communications, setCommunications] = useState<Communication[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [stats, setStats] = useState<any>(null);
+    const [stats, setStats] = useState<{ totalCommunications: number; daysSinceLastContact: number } | null>(null);
 
-    useEffect(() => {
-        fetchCommunications();
-        fetchStats();
-    }, [assetId]);
+    const fetchStats = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/assets/${assetId}/communications/stats`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (data.success) {
+                setStats(data.stats);
+            }
+        } catch (error) {
+            console.error('Failed to fetch stats:', error);
+        }
+    };
 
     const fetchCommunications = async () => {
         try {
@@ -66,20 +76,11 @@ const CommunicationLog = ({ assetId, institution }: CommunicationLogProps) => {
         }
     };
 
-    const fetchStats = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`/api/assets/${assetId}/communications/stats`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            if (data.success) {
-                setStats(data.stats);
-            }
-        } catch (error) {
-            console.error('Failed to fetch stats:', error);
-        }
-    };
+    useEffect(() => {
+        fetchCommunications();
+        fetchStats();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [assetId]);
 
     const getMethodIcon = (method: string) => {
         const iconProps = { style: { width: '1rem', height: '1rem' } };
@@ -107,11 +108,11 @@ const CommunicationLog = ({ assetId, institution }: CommunicationLogProps) => {
         const date = new Date(dateString);
         const now = new Date();
         const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays === 0) return 'Today';
         if (diffDays === 1) return 'Yesterday';
         if (diffDays < 7) return `${diffDays} days ago`;
-        
+
         return date.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -137,7 +138,7 @@ const CommunicationLog = ({ assetId, institution }: CommunicationLogProps) => {
                     </h3>
                     {stats && (
                         <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 0 }}>
-                            {stats.totalCommunications} {stats.totalCommunications === 1 ? 'interaction' : 'interactions'} • 
+                            {stats.totalCommunications} {stats.totalCommunications === 1 ? 'interaction' : 'interactions'} •
                             {stats.daysSinceLastContact === 0 ? ' Last contact today' : ` ${stats.daysSinceLastContact} days since last contact`}
                         </p>
                     )}
@@ -157,7 +158,7 @@ const CommunicationLog = ({ assetId, institution }: CommunicationLogProps) => {
                     <MessageSquare className="empty-state-icon" />
                     <div className="empty-state-title">No communications yet</div>
                     <p className="empty-state-description">
-                        Start by logging your first interaction with {institution}. 
+                        Start by logging your first interaction with {institution}.
                         This helps track progress and ensures nothing falls through the cracks.
                     </p>
                     <button

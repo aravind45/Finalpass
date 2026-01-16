@@ -1,13 +1,17 @@
 import { motion } from 'framer-motion';
-import { Heart, AlertCircle, Clock, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
+import { Heart, AlertCircle, Clock, CheckCircle2, ChevronRight, FileText, DollarSign, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface Asset {
     id: string;
     institution: string;
     type: string;
-    value: { s: number; e: number; d: number[] };
+    value: string | number | { s: number; e: number; d: number[] };
     status: string;
     metadata: string;
     requirements: string;
@@ -53,18 +57,18 @@ const Dashboard = () => {
     };
 
     const getStatusInfo = (status: string) => {
-        const statusMap: Record<string, { label: string; color: string; icon: any }> = {
-            'CONTACTED': { label: 'In Progress', color: 'var(--color-accent)', icon: Clock },
-            'DISTRIBUTED': { label: 'Complete', color: 'var(--color-success)', icon: CheckCircle2 },
-            'Processing': { label: 'Processing', color: 'var(--color-warning)', icon: Clock },
+        const statusMap: Record<string, { label: string; color: string; icon: React.ElementType; bg: string }> = {
+            'CONTACTED': { label: 'In Progress', color: 'text-amber-600', icon: Clock, bg: 'bg-amber-100' },
+            'DISTRIBUTED': { label: 'Complete', color: 'text-emerald-600', icon: CheckCircle2, bg: 'bg-emerald-100' },
+            'Processing': { label: 'Processing', color: 'text-blue-600', icon: Activity, bg: 'bg-blue-100' },
         };
-        return statusMap[status] || { label: status, color: 'var(--color-text-muted)', icon: Clock };
+        return statusMap[status] || { label: status, color: 'text-slate-500', icon: Clock, bg: 'bg-slate-100' };
     };
 
     if (loading) {
         return (
-            <div className="loading">
-                <div className="spinner"></div>
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
         );
     }
@@ -73,102 +77,116 @@ const Dashboard = () => {
     const inProgressAssets = estate?.assets.filter(a => a.status === 'CONTACTED') || [];
     const completedAssets = estate?.assets.filter(a => a.status === 'DISTRIBUTED') || [];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const totalValue = estate?.assets.reduce((sum, asset) => sum + parseFloat(asset.value as any || 0), 0) || 0;
+
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+
     return (
-        <div style={{
-            minHeight: '100vh',
-            padding: 'var(--space-xl)',
-            background: 'var(--color-bg-secondary)'
-        }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                {/* Compassionate Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="section-header"
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
-                        <Heart style={{ width: '1.5rem', height: '1.5rem', color: 'var(--color-accent)' }} />
-                        <h1 className="section-title" style={{ marginBottom: 0 }}>
-                            {estate?.name || 'Your Estate'}
-                        </h1>
+        <div className="p-6 space-y-8">
+            {/* Header Section */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col gap-2"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-pink-100 rounded-full">
+                        <Heart className="w-6 h-6 text-pink-500" />
                     </div>
-                    <p className="section-subtitle">
-                        We're here to help you through this process, one step at a time.
-                    </p>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                            {user?.name ? `Welcome back, ${user.name}` : (estate?.name || 'Your Estate')}
+                        </h1>
+                        <p className="text-muted-foreground">
+                            {estate?.name ? `Managing: ${estate.name}` : 'Estate Overview'}
+                        </p>
+                    </div>
+                </div>
+                <p className="text-muted-foreground max-w-2xl mt-2">
+                    We are here to help you navigate the estate settlement process, step by step.
+                </p>
+            </motion.div>
+
+            {/* Urgent Actions Alert */}
+            {urgentAssets.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                >
+                    <Card className="border-l-4 border-l-red-500 bg-red-50 dark:bg-red-950/20">
+                        <CardContent className="flex items-start gap-4 p-4">
+                            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                            <div>
+                                <h3 className="font-semibold text-red-900 dark:text-red-200">Action Needed</h3>
+                                <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                                    {urgentAssets.length} {urgentAssets.length === 1 ? 'asset needs' : 'assets need'} your attention.
+                                    These institutions haven't responded in over 14 days.
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </motion.div>
+            )}
 
-                {/* Urgent Actions Alert - Only show if there are urgent items */}
-                {urgentAssets.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="alert alert-warning mb-5"
-                    >
-                        <AlertCircle className="alert-icon" />
-                        <div className="alert-content">
-                            <div className="alert-title">Action Needed</div>
-                            <p style={{ marginBottom: 0 }}>
-                                {urgentAssets.length} {urgentAssets.length === 1 ? 'asset needs' : 'assets need'} your attention. 
-                                These institutions haven't responded in over 14 days.
-                            </p>
-                        </div>
-                    </motion.div>
-                )}
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{estate?.assets.length || 0}</div>
+                        <p className="text-xs text-muted-foreground">Accounts tracking</p>
+                    </CardContent>
+                </Card>
 
-                {/* Progress Overview - Compact, at-a-glance */}
-                <div className="grid grid-cols-3 mb-5">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="card card-compact text-center"
-                    >
-                        <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 'var(--space-xs)' }}>
-                            {estate?.assets.length || 0}
-                        </div>
-                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                            Total Assets
-                        </div>
-                    </motion.div>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Est. Value</CardTitle>
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">${totalValue.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground">Total estate value</p>
+                    </CardContent>
+                </Card>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="card card-compact text-center"
-                    >
-                        <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-warning)', marginBottom: 'var(--space-xs)' }}>
-                            {inProgressAssets.length}
-                        </div>
-                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                            In Progress
-                        </div>
-                    </motion.div>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+                        <Activity className="h-4 w-4 text-amber-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{inProgressAssets.length}</div>
+                        <p className="text-xs text-muted-foreground">Awaiting response</p>
+                    </CardContent>
+                </Card>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="card card-compact text-center"
-                    >
-                        <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-success)', marginBottom: 'var(--space-xs)' }}>
-                            {completedAssets.length}
-                        </div>
-                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                            Completed
-                        </div>
-                    </motion.div>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{completedAssets.length}</div>
+                        <p className="text-xs text-muted-foreground">Assets distributed</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Assets List */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-semibold tracking-tight">Your Assets</h2>
+                        <p className="text-sm text-muted-foreground">Review status and recent activity</p>
+                    </div>
                 </div>
 
-                {/* Assets List - Clean, scannable */}
-                <div className="section-header">
-                    <h2 className="section-title" style={{ fontSize: 'var(--font-size-xl)' }}>Your Assets</h2>
-                    <p className="section-subtitle">
-                        Click on any asset to see details and communication history
-                    </p>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+                <div className="grid gap-4">
                     {estate?.assets.map((asset, index) => {
                         const urgency = getUrgency(asset.metadata);
                         const statusInfo = getStatusInfo(asset.status);
@@ -179,110 +197,73 @@ const Dashboard = () => {
                         return (
                             <motion.div
                                 key={asset.id}
-                                initial={{ opacity: 0, x: -20 }}
+                                initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="card"
-                                style={{
-                                    cursor: 'pointer',
-                                    borderLeft: urgency === 'high' ? '4px solid var(--color-warning)' : 'none'
-                                }}
-                                onClick={() => navigate(`/assets/${asset.id}`)}
+                                transition={{ delay: index * 0.05 }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    {/* Left: Institution Info */}
-                                    <div style={{ flex: 1 }}>
-                                        <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, marginBottom: 'var(--space-xs)', color: 'var(--color-text-primary)' }}>
-                                            {asset.institution}
-                                        </h3>
-                                        <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)' }}>
-                                            {asset.type}
-                                        </p>
-                                        
-                                        {/* Status and Last Contact */}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-                                                <StatusIcon style={{ width: '1rem', height: '1rem', color: statusInfo.color }} />
-                                                <span style={{ fontSize: 'var(--font-size-sm)', color: statusInfo.color, fontWeight: 500 }}>
-                                                    {statusInfo.label}
+                                <Card
+                                    className={cn(
+                                        "hover:bg-muted/50 transition-colors cursor-pointer",
+                                        urgency === 'high' && "border-l-4 border-l-red-500"
+                                    )}
+                                    onClick={() => navigate(`/assets/${asset.id}`)}
+                                >
+                                    <div className="flex items-center p-4 gap-4">
+                                        <div className={cn("p-2 rounded-full hidden sm:block", statusInfo.bg)}>
+                                            <StatusIcon className={cn("w-5 h-5", statusInfo.color)} />
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <h3 className="font-semibold truncate pr-4">{asset.institution}</h3>
+                                                <span className="font-bold text-foreground">
+                                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                                    ${parseFloat(asset.value as any).toLocaleString()}
                                                 </span>
                                             </div>
-                                            {meta.lastContact && (
-                                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>
-                                                    Last contact: {new Date(meta.lastContact).toLocaleDateString()}
-                                                </span>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <div className="flex items-center gap-2 text-muted-foreground">
+                                                    <span>{asset.type}</span>
+                                                    <span>•</span>
+                                                    <span className={cn("font-medium", statusInfo.color)}>{statusInfo.label}</span>
+                                                </div>
+                                                {meta.lastContact && (
+                                                    <div className="text-muted-foreground hidden sm:block">
+                                                        Last: {new Date(meta.lastContact).toLocaleDateString()}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {urgency === 'high' && reqs.urgentAction && (
+                                                <div className="mt-2 text-xs font-medium text-red-600 bg-red-50 p-1.5 rounded inline-block">
+                                                    Action needed: {reqs.urgentAction}
+                                                </div>
                                             )}
                                         </div>
-                                    </div>
 
-                                    {/* Center: Value */}
-                                    <div style={{ textAlign: 'right', marginRight: 'var(--space-xl)' }}>
-                                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-xs)' }}>
-                                            Value
-                                        </div>
-                                        <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                                            ${parseFloat(asset.value as any).toLocaleString()}
-                                        </div>
+                                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
                                     </div>
-
-                                    {/* Right: Action */}
-                                    <button 
-                                        className="btn btn-ghost"
-                                        style={{ padding: 'var(--space-sm)' }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/assets/${asset.id}`);
-                                        }}
-                                    >
-                                        <ChevronRight style={{ width: '1.25rem', height: '1.25rem' }} />
-                                    </button>
-                                </div>
-
-                                {/* Urgent Action Message */}
-                                {urgency === 'high' && reqs.urgentAction && (
-                                    <div style={{
-                                        marginTop: 'var(--space-md)',
-                                        padding: 'var(--space-md)',
-                                        background: 'var(--color-warning-soft)',
-                                        borderRadius: 'var(--radius-md)',
-                                        fontSize: 'var(--font-size-sm)',
-                                        color: 'var(--color-text-primary)'
-                                    }}>
-                                        <strong>Action needed:</strong> {reqs.urgentAction}
-                                    </div>
-                                )}
+                                </Card>
                             </motion.div>
                         );
                     })}
                 </div>
-
-                {/* Helpful Actions */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="card mt-5"
-                    style={{ background: 'var(--color-accent-soft)', borderColor: 'var(--color-accent-soft)' }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div>
-                            <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, marginBottom: 'var(--space-xs)', color: 'var(--color-text-primary)' }}>
-                                Need to add documents?
-                            </h3>
-                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 0 }}>
-                                Upload death certificates, wills, or other estate documents
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => navigate('/intake')}
-                            className="btn btn-primary"
-                        >
-                            <FileText style={{ width: '1rem', height: '1rem' }} />
-                            Upload Documents
-                        </button>
-                    </div>
-                </motion.div>
             </div>
+
+            {/* Helpful Actions */}
+            <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="flex flex-col sm:flex-row items-center justify-between p-6 gap-4">
+                    <div className="space-y-1 text-center sm:text-left">
+                        <h3 className="font-semibold text-lg">Need to add documents?</h3>
+                        <p className="text-sm text-muted-foreground">
+                            Upload death certificates, wills, or other estate documents to keep everything organized.
+                        </p>
+                    </div>
+                    <Button onClick={() => navigate('/intake')} size="lg">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Upload Documents
+                    </Button>
+                </CardContent>
+            </Card>
         </div>
     );
 };

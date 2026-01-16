@@ -1,148 +1,197 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     FileText,
-    Gem, // For Assets
-    CheckSquare, // For Checklist
-    MessageSquare, // For Communications
-    Users, // For Family
+    CheckSquare,
+    MessageSquare,
+    Users,
     LogOut,
     Menu,
-    X,
-    FolderOpen // For Intake/Scan
+    FolderOpen,
+    Grid,
+    Lock,
+    Search,
+    User
 } from 'lucide-react';
-import { useState } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 
-const Layout = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const navigate = useNavigate();
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+
+const menuItems = [
+    { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+    { path: '/intake', label: 'Scan Intake', icon: FolderOpen },
+    { path: '/assets', label: 'Assets', icon: Grid },
+    { path: '/digital-assets', label: 'Digital Vault', icon: Lock },
+    { path: '/discovery', label: 'Detective', icon: Search },
+    { path: '/checklist', label: 'Checklist', icon: CheckSquare },
+    { path: '/documents', label: 'Documents', icon: FileText },
+    { path: '/communications', label: 'Communications', icon: MessageSquare },
+    { path: '/family', label: 'Family & Updates', icon: Users },
+];
+
+interface NavContentProps {
+    setIsMobileOpen?: (open: boolean) => void;
+    onLogout: () => void;
+}
+
+const NavContent = ({ setIsMobileOpen, onLogout }: NavContentProps) => {
     const location = useLocation();
 
-    const menuItems = [
-        { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-        { path: '/intake', label: 'Scan Intake', icon: FolderOpen },
-        { path: '/assets', label: 'Assets', icon: Grid },
-        { path: '/digital-assets', label: 'Digital Vault', icon: Lock },
-        { path: '/discovery', label: 'Detective', icon: Search },
-        { path: '/checklist', label: 'Checklist', icon: CheckSquare },
-        { path: '/documents', label: 'Documents', icon: FileText },
-        { path: '/communications', label: 'Communications', icon: MessageSquare },
-        { path: '/family', label: 'Family & Updates', icon: Users },
-    ];
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : { name: 'Executor Person', email: 'executor@example.com' };
+
+    return (
+        <div className="flex flex-col h-full bg-background border-r">
+            <div className="p-6 border-b flex items-center justify-center lg:justify-start">
+                <h1 className="text-2xl font-bold text-foreground">
+                    Expected<span className="text-primary">Estate</span>
+                </h1>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-4">
+                <nav className="grid gap-1 px-4">
+                    {menuItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                className={cn(
+                                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:text-primary",
+                                    isActive
+                                        ? "bg-primary/10 text-primary"
+                                        : "text-muted-foreground hover:bg-muted"
+                                )}
+                                onClick={() => setIsMobileOpen?.(false)}
+                            >
+                                <Icon className="h-4 w-4" />
+                                {item.label}
+                            </NavLink>
+                        );
+                    })}
+                </nav>
+            </div>
+
+            <div className="p-4 border-t">
+                <div className="flex items-center gap-3 px-3 py-2 mb-2 rounded-lg bg-muted/50">
+                    <Avatar className="h-9 w-9">
+                        <AvatarImage src="/placeholder-avatar.jpg" alt={user.name} />
+                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{user.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                </div>
+                <Button
+                    variant="ghost"
+                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                    onClick={onLogout}
+                >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                </Button>
+            </div>
+        </div>
+    );
+};
+
+const Layout = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : { name: 'Executor Person', email: 'executor@example.com' };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         navigate('/login');
     };
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
-            {/* Mobile Toggle */}
-            <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                style={{
-                    position: 'fixed',
-                    top: '1rem',
-                    left: '1rem',
-                    zIndex: 50,
-                    padding: '0.5rem',
-                    background: 'white',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    display: 'none' // Hidden on desktop via CSS ideally, but simplified here
-                }}
-                className="mobile-toggle"
-            >
-                {isSidebarOpen ? <X /> : <Menu />}
-            </button>
+        <div className="min-h-screen bg-muted/30">
+            {/* Desktop Sidebar */}
+            <aside className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+                <NavContent onLogout={handleLogout} />
+            </aside>
 
-            {/* Sidebar */}
-            <motion.aside
-                initial={false}
-                animate={{ width: isSidebarOpen ? '280px' : '0px' }}
-                style={{
-                    background: 'white',
-                    borderRight: '1px solid #e2e8f0',
-                    height: '100vh',
-                    position: 'fixed',
-                    left: 0,
-                    top: 0,
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    zIndex: 40
-                }}
-            >
-                <div style={{ padding: '2rem', borderBottom: '1px solid #f1f5f9' }}>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                        Expected<span style={{ color: '#3b82f6' }}>Estate</span>
-                    </h1>
-                    <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>Est. John Doe</p>
-                </div>
+            {/* Mobile Header & Content */}
+            <div className="lg:pl-72 flex flex-col min-h-screen">
+                <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+                    <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" className="-m-2.5 p-2.5 text-muted-foreground lg:hidden">
+                                <span className="sr-only">Open sidebar</span>
+                                <Menu className="h-6 w-6" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="p-0 w-72">
+                            <NavContent setIsMobileOpen={setIsMobileOpen} onLogout={handleLogout} />
+                        </SheetContent>
+                    </Sheet>
 
-                <nav style={{ flex: 1, padding: '1rem' }}>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        {menuItems.map((item) => {
-                            const Icon = item.icon;
-                            const isActive = location.pathname === item.path;
-                            return (
-                                <li key={item.path}>
-                                    <NavLink
-                                        to={item.path}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.75rem',
-                                            padding: '0.75rem 1rem',
-                                            borderRadius: '8px',
-                                            color: isActive ? '#2563eb' : '#64748b',
-                                            background: isActive ? '#eff6ff' : 'transparent',
-                                            textDecoration: 'none',
-                                            fontWeight: isActive ? 600 : 500,
-                                            transition: 'all 0.2s'
-                                        }}
-                                    >
-                                        <Icon className="w-5 h-5" />
-                                        <span>{item.label}</span>
-                                    </NavLink>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </nav>
+                    <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                        <div className="flex flex-1 items-center">
+                            {/* Breadcrumbs or Title could go here */}
+                            <h2 className="text-lg font-semibold text-foreground">
+                                {menuItems.find(m => m.path === location.pathname)?.label || 'Dashboard'}
+                            </h2>
+                        </div>
+                        <div className="flex items-center gap-x-4 lg:gap-x-6">
+                            {/* User Dropdown */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56" align="end" forceMount>
+                                    <DropdownMenuLabel className="font-normal">
+                                        <div className="flex flex-col space-y-1">
+                                            <p className="text-sm font-medium leading-none">{user.name}</p>
+                                            <p className="text-xs leading-none text-muted-foreground">
+                                                {user.email}
+                                            </p>
+                                        </div>
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                                        <User className="mr-2 h-4 w-4" />
+                                        <span>Profile</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Log out</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    </div>
+                </header>
 
-                <div style={{ padding: '1rem', borderTop: '1px solid #f1f5f9' }}>
-                    <button
-                        onClick={handleLogout}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.75rem',
-                            padding: '0.75rem 1rem',
-                            width: '100%',
-                            border: 'none',
-                            background: 'transparent',
-                            color: '#ef4444',
-                            cursor: 'pointer',
-                            fontWeight: 500
-                        }}
-                    >
-                        <LogOut className="w-5 h-5" />
-                        <span>Sign Out</span>
-                    </button>
-                </div>
-            </motion.aside>
-
-            {/* Main Content */}
-            <main style={{
-                flex: 1,
-                marginLeft: isSidebarOpen ? '280px' : '0px',
-                transition: 'margin-left 0.3s ease',
-                width: '100%'
-            }}>
-                <Outlet />
-            </main>
+                <main className="flex-1 py-6 px-4 sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-7xl">
+                        <Outlet />
+                    </div>
+                </main>
+            </div>
         </div>
     );
 };

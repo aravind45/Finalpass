@@ -1,7 +1,22 @@
-import { motion } from 'framer-motion';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { User, Mail, FileText, CheckCircle, Lock, MapPin } from 'lucide-react';
 import { useState } from 'react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { User, Mail, Lock, Loader2, CheckCircle } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 const US_STATES = [
     { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
@@ -23,26 +38,42 @@ const US_STATES = [
     { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }
 ];
 
+const registerSchema = z.object({
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    email: z.string().email('Please enter a valid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    state: z.string().min(2, 'Please select your state'),
+    role: z.string(),
+});
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
 const Register = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const role = searchParams.get('role') || 'executor';
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [serverError, setServerError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        formState: { errors },
+    } = useForm<RegisterFormValues>({
+        resolver: zodResolver(registerSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            password: '',
+            state: '',
+            role: role.toUpperCase(),
+        },
+    });
 
-        const formData = new FormData(e.target as HTMLFormElement);
-        const data = {
-            name: formData.get('name') as string,
-            email: formData.get('email') as string,
-            password: formData.get('password') as string,
-            state: formData.get('state') as string,
-            role: role.toUpperCase()
-        };
+    const onSubmit = async (data: RegisterFormValues) => {
+        setServerError('');
+        setIsLoading(true);
 
         try {
             const response = await fetch('/api/auth/register', {
@@ -64,188 +95,135 @@ const Register = () => {
             localStorage.setItem('user', JSON.stringify(result.user));
 
             // Navigate to dashboard
+            // Navigate to dashboard
             navigate('/dashboard');
-        } catch (err: any) {
-            setError(err.message || 'Registration failed. Please try again.');
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setServerError(err.message);
+            } else {
+                setServerError('Registration failed. Please try again.');
+            }
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '2rem',
-            background: 'linear-gradient(135deg, #fdfcf8 0%, #f0fdf4 100%)'
-        }}>
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="glass-card"
-                style={{ maxWidth: '500px', width: '100%' }}
-            >
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <h2 style={{ fontSize: '2rem', color: 'var(--text-primary)' }}>Create Your Account</h2>
-                    <p>You are joining as a <strong>{role === 'executor' ? 'Professional Executor' : 'Beneficiary'}</strong></p>
-                </div>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fdfcf8] to-[#f0fdf4] p-4">
+            <Card className="w-full max-w-[500px] shadow-lg border-t-4 border-t-primary">
+                <CardHeader className="text-center space-y-2">
+                    <CardTitle className="text-2xl font-bold text-primary">Create Your Account</CardTitle>
+                    <CardDescription>
+                        You are joining as a <strong className="text-foreground">{role === 'executor' ? 'Professional Executor' : 'Beneficiary'}</strong>
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        {serverError && (
+                            <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
+                                {serverError}
+                            </div>
+                        )}
 
-                {error && (
-                    <div style={{
-                        background: 'var(--accent-orange-soft)',
-                        border: '1px solid var(--accent-orange)',
-                        borderRadius: '12px',
-                        padding: '1rem',
-                        marginBottom: '1.5rem',
-                        color: 'var(--accent-orange)'
-                    }}>
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Full Name</label>
-                        <div style={{ position: 'relative' }}>
-                            <User style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: 'var(--text-muted)' }} />
-                            <input
-                                type="text"
-                                name="name"
-                                placeholder="John Doe"
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                    borderRadius: '12px',
-                                    border: '1px solid var(--border-color)',
-                                    background: 'white',
-                                    fontSize: '1rem'
-                                }}
-                            />
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Full Name</Label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="name"
+                                    placeholder="John Doe"
+                                    className="pl-9"
+                                    {...register('name')}
+                                />
+                            </div>
+                            {errors.name && (
+                                <p className="text-sm text-red-500">{errors.name.message}</p>
+                            )}
                         </div>
-                    </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Email Address</label>
-                        <div style={{ position: 'relative' }}>
-                            <Mail style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: 'var(--text-muted)' }} />
-                            <input
-                                type="email"
-                                name="email"
-                                placeholder="john@example.com"
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                    borderRadius: '12px',
-                                    border: '1px solid var(--border-color)',
-                                    background: 'white',
-                                    fontSize: '1rem'
-                                }}
-                            />
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email Address</Label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="john@example.com"
+                                    className="pl-9"
+                                    {...register('email')}
+                                />
+                            </div>
+                            {errors.email && (
+                                <p className="text-sm text-red-500">{errors.email.message}</p>
+                            )}
                         </div>
-                    </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Password</label>
-                        <div style={{ position: 'relative' }}>
-                            <Lock style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: 'var(--text-muted)' }} />
-                            <input
-                                type="password"
-                                name="password"
-                                placeholder="••••••••"
-                                required
-                                minLength={8}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                    borderRadius: '12px',
-                                    border: '1px solid var(--border-color)',
-                                    background: 'white',
-                                    fontSize: '1rem'
-                                }}
-                            />
+                        <div className="space-y-2">
+                            <Label htmlFor="password">Password</Label>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    className="pl-9"
+                                    {...register('password')}
+                                />
+                            </div>
+                            <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
+                            {errors.password && (
+                                <p className="text-sm text-red-500">{errors.password.message}</p>
+                            )}
                         </div>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
-                            Minimum 8 characters
-                        </p>
-                    </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                            Your State <span style={{ color: 'var(--accent-orange)' }}>*</span>
-                        </label>
-                        <div style={{ position: 'relative' }}>
-                            <MapPin style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: 'var(--text-muted)', zIndex: 1 }} />
-                            <select
-                                name="state"
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                    borderRadius: '12px',
-                                    border: '1px solid var(--border-color)',
-                                    background: 'white',
-                                    fontSize: '1rem',
-                                    appearance: 'none'
-                                }}
-                            >
-                                <option value="">Select your state</option>
-                                {US_STATES.map(state => (
-                                    <option key={state.code} value={state.code}>{state.name}</option>
-                                ))}
-                            </select>
+                        <div className="space-y-2">
+                            <Label htmlFor="state">Your State <span className="text-orange-500">*</span></Label>
+                            <Select onValueChange={(value) => setValue('state', value)} defaultValue="">
+                                <SelectTrigger className={cn(errors.state && "border-red-500")}>
+                                    <SelectValue placeholder="Select your state" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {US_STATES.map((state) => (
+                                        <SelectItem key={state.code} value={state.code}>
+                                            {state.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">Required for state-specific legal requirements</p>
+                            {errors.state && (
+                                <p className="text-sm text-red-500">{errors.state.message}</p>
+                            )}
                         </div>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
-                            Required for state-specific legal requirements
-                        </p>
+
+                        <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Creating Account...
+                                </>
+                            ) : (
+                                <>
+                                    Create My Advocate <CheckCircle className="ml-2 h-4 w-4" />
+                                </>
+                            )}
+                        </Button>
+                    </form>
+                </CardContent>
+                <CardFooter className="flex justify-center border-t bg-slate-50/50 pt-4 rounded-b-xl">
+                    <div className="text-sm text-muted-foreground">
+                        Already have an account?{' '}
+                        <Link to="/login" className="text-primary font-semibold hover:underline">
+                            Sign In →
+                        </Link>
                     </div>
-
-                    <button
-                        type="submit"
-                        className="btn-primary"
-                        disabled={loading}
-                        style={{
-                            marginTop: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem',
-                            opacity: loading ? 0.6 : 1
-                        }}
-                    >
-                        {loading ? 'Creating Account...' : 'Create My Advocate'} <CheckCircle className="w-5 h-5" />
-                    </button>
-                </form>
-
-                <div style={{
-                    marginTop: '2rem',
-                    paddingTop: '2rem',
-                    borderTop: '1px solid var(--border-color)',
-                    textAlign: 'center'
-                }}>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                        Already have an account?
+                </CardFooter>
+                <div className="pb-4 text-center">
+                    <p className="text-xs text-muted-foreground px-6">
+                        By continuing, you agree to our terms of service and professional fiduciary standards.
                     </p>
-                    <Link
-                        to="/login"
-                        style={{
-                            color: 'var(--accent-blue)',
-                            textDecoration: 'none',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Sign In →
-                    </Link>
                 </div>
-
-                <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    By continuing, you agree to our terms of service and professional fiduciary standards.
-                </p>
-            </motion.div>
+            </Card>
         </div>
     );
 };

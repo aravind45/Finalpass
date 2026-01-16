@@ -1,7 +1,10 @@
-
-import { motion } from 'framer-motion';
-import { Bitcoin, Cloud, Key, Shield, Plus, Lock } from 'lucide-react';
 import { useState } from 'react';
+import { Bitcoin, Cloud, Key, Shield, Plus, Lock } from 'lucide-react';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const DigitalAssets = () => {
     // Mock data for MVP
@@ -12,64 +15,52 @@ const DigitalAssets = () => {
     ]);
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="p-8 max-w-5xl mx-auto space-y-8">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
                         <Shield className="w-8 h-8 text-indigo-600" />
                         Digital Vault
                     </h1>
-                    <p style={{ color: '#64748b' }}>Secure inventory for digital legacy, crypto, and passwords.</p>
+                    <p className="text-muted-foreground mt-1">Secure inventory for digital legacy, crypto, and passwords.</p>
                 </div>
-                <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Plus className="w-4 h-4" /> Add Digital Asset
-                </button>
+                <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Digital Asset
+                </Button>
             </div>
 
-            <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '12px', padding: '1rem', marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <Lock className="w-6 h-6 text-red-500" />
-                <div>
-                    <h4 style={{ margin: 0, fontWeight: 600, color: '#991b1b' }}>Security Warning</h4>
-                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#7f1d1d' }}>
-                        Never store actual passwords, seed phrases, or private keys here. Only store <strong>location hints</strong> (e.g., "In the blue safe") or legacy contact instructions.
-                    </p>
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md">
+                <div className="flex items-start gap-4">
+                    <Lock className="w-5 h-5 text-red-600 mt-0.5" />
+                    <div>
+                        <h3 className="font-semibold text-red-900">Security Warning</h3>
+                        <p className="text-sm text-red-700 mt-1">
+                            Never store actual passwords, seed phrases, or private keys here. Only store <strong>location hints</strong> (e.g., "In the blue safe") or legacy contact instructions.
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gap: '1rem' }}>
-                {assets.map((asset, i) => (
-                    <motion.div
-                        key={asset.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="glass-card"
-                        style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ padding: '0.75rem', borderRadius: '12px' }} className={asset.bg}>
-                                <asset.icon className={`w-6 h-6 ${asset.color}`} />
+            <div className="grid gap-4">
+                {assets.map((asset) => (
+                    <Card key={asset.id} className="hover:bg-muted/50 transition-colors">
+                        <CardContent className="flex items-center justify-between p-6">
+                            <div className="flex items-center gap-4">
+                                <div className={cn("p-2 rounded-xl", asset.bg)}>
+                                    <asset.icon className={cn("w-6 h-6", asset.color)} />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold">{asset.name}</h3>
+                                    <p className="text-xs text-muted-foreground font-medium tracking-wide">{asset.type.toUpperCase()}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 style={{ margin: 0, fontWeight: 600 }}>{asset.name}</h3>
-                                <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>{asset.type.toUpperCase()}</p>
-                            </div>
-                        </div>
 
-                        <div style={{ textAlign: 'right' }}>
-                            <span style={{
-                                display: 'inline-block',
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '99px',
-                                fontSize: '0.85rem',
-                                fontWeight: 500,
-                                background: '#f1f5f9',
-                                color: '#475569'
-                            }}>
+                            <Badge variant="outline" className="text-sm font-normal py-1">
                                 {asset.value}
-                            </span>
-                        </div>
-                    </motion.div>
+                            </Badge>
+                        </CardContent>
+                    </Card>
                 ))}
             </div>
         </div>

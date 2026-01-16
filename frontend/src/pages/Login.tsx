@@ -1,21 +1,43 @@
-import { motion } from 'framer-motion';
-import { LogIn, Mail, Lock, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { LogIn, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+
+// Define validation schema
+const loginSchema = z.object({
+    email: z.string().email('Please enter a valid email address'),
+    password: z.string().min(1, 'Password is required'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-        email: '',
-        password: ''
-    });
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [serverError, setServerError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<LoginFormValues>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: '',
+            password: '',
+        },
+    });
+
+    const onSubmit = async (data: LoginFormValues) => {
+        setServerError('');
+        setIsLoading(true);
 
         try {
             const response = await fetch('/api/auth/login', {
@@ -23,156 +45,102 @@ const Login = () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(data)
             });
 
-            const data = await response.json();
+            const result = await response.json();
 
-            if (!data.success) {
-                throw new Error(data.error || 'Login failed');
+            if (!result.success) {
+                throw new Error(result.error || 'Login failed');
             }
 
             // Store token in localStorage
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', result.token);
+            localStorage.setItem('user', JSON.stringify(result.user));
 
             // Navigate to dashboard
+            // Navigate to dashboard
             navigate('/dashboard');
-        } catch (err: any) {
-            setError(err.message || 'Login failed. Please try again.');
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setServerError(err.message);
+            } else {
+                setServerError('Login failed. Please try again.');
+            }
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #fdfcf8 0%, #e0f2fe 100%)',
-            padding: '2rem'
-        }}>
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass-card"
-                style={{ maxWidth: '450px', width: '100%', padding: '3rem' }}
-            >
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <div style={{
-                        display: 'inline-flex',
-                        background: 'var(--accent-blue-soft)',
-                        padding: '1rem',
-                        borderRadius: '50%',
-                        marginBottom: '1rem'
-                    }}>
-                        <LogIn className="w-8 h-8 text-blue-500" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fdfcf8] to-[#e0f2fe] p-4">
+            <Card className="w-full max-w-[400px] shadow-lg border-t-4 border-t-primary">
+                <CardHeader className="text-center space-y-2">
+                    <div className="mx-auto bg-blue-50 p-3 rounded-full w-fit mb-2">
+                        <LogIn className="w-6 h-6 text-primary" />
                     </div>
-                    <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Welcome Back</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>
+                    <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+                    <CardDescription>
                         Sign in to continue your estate settlement journey
-                    </p>
-                </div>
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        {serverError && (
+                            <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
+                                {serverError}
+                            </div>
+                        )}
 
-                {error && (
-                    <div style={{
-                        background: 'var(--accent-orange-soft)',
-                        border: '1px solid var(--accent-orange)',
-                        borderRadius: '12px',
-                        padding: '1rem',
-                        marginBottom: '1.5rem',
-                        color: 'var(--accent-orange)'
-                    }}>
-                        {error}
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email Address</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="name@example.com"
+                                {...register('email')}
+                                className={cn(errors.email && "border-red-500")}
+                            />
+                            {errors.email && (
+                                <p className="text-sm text-red-500">{errors.email.message}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="password">Password</Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                placeholder="••••••••"
+                                {...register('password')}
+                                className={cn(errors.password && "border-red-500")}
+                            />
+                            {errors.password && (
+                                <p className="text-sm text-red-500">{errors.password.message}</p>
+                            )}
+                        </div>
+
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Signing in...
+                                </>
+                            ) : (
+                                'Sign In'
+                            )}
+                        </Button>
+                    </form>
+                </CardContent>
+                <CardFooter className="flex flex-col space-y-4 pt-4 border-t bg-slate-50/50 rounded-b-xl">
+                    <div className="text-sm text-center text-muted-foreground">
+                        Don't have an account?{' '}
+                        <Link to="/" className="text-primary font-semibold hover:underline">
+                            Create Account
+                        </Link>
                     </div>
-                )}
-
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                            <Mail className="w-4 h-4 inline mr-2" />
-                            Email Address
-                        </label>
-                        <input
-                            type="email"
-                            required
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            placeholder="your.email@example.com"
-                            style={{
-                                width: '100%',
-                                padding: '0.875rem',
-                                borderRadius: '12px',
-                                border: '1px solid var(--border-color)',
-                                fontSize: '1rem'
-                            }}
-                        />
-                    </div>
-
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                            <Lock className="w-4 h-4 inline mr-2" />
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            required
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            placeholder="••••••••"
-                            style={{
-                                width: '100%',
-                                padding: '0.875rem',
-                                borderRadius: '12px',
-                                border: '1px solid var(--border-color)',
-                                fontSize: '1rem'
-                            }}
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="btn-primary"
-                        style={{
-                            width: '100%',
-                            padding: '1rem',
-                            fontSize: '1.1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem',
-                            opacity: loading ? 0.6 : 1
-                        }}
-                    >
-                        {loading ? 'Signing in...' : 'Sign In'}
-                        {!loading && <Sparkles className="w-5 h-5" />}
-                    </button>
-                </form>
-
-                <div style={{
-                    marginTop: '2rem',
-                    textAlign: 'center',
-                    paddingTop: '2rem',
-                    borderTop: '1px solid var(--border-color)'
-                }}>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                        Don't have an account?
-                    </p>
-                    <Link
-                        to="/"
-                        style={{
-                            color: 'var(--accent-blue)',
-                            textDecoration: 'none',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Create Account →
-                    </Link>
-                </div>
-            </motion.div>
+                </CardFooter>
+            </Card>
         </div>
     );
 };

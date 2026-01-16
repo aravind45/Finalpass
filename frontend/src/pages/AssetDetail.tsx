@@ -9,7 +9,6 @@ import {
     CheckCircle2,
     Clock,
     MessageSquare,
-    Plus,
     FileText,
     Send
 } from 'lucide-react';
@@ -36,17 +35,60 @@ interface NextAction {
     dueDate: string;
 }
 
+interface FormMetadata {
+    id: string;
+    name: string;
+    description: string;
+    pageCount: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any;
+}
+
 const AssetDetail = () => {
     const { assetId } = useParams<{ assetId: string }>();
     const navigate = useNavigate();
     const [asset, setAsset] = useState<Asset | null>(null);
     const [nextActions, setNextActions] = useState<NextAction[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showAddComm, setShowAddComm] = useState(false);
     const [showSendFax, setShowSendFax] = useState(false);
-    const [forms, setForms] = useState<any[]>([]);
+    const [forms, setForms] = useState<FormMetadata[]>([]);
 
     useEffect(() => {
+        const fetchAssetDetails = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/estates/dashboard', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    const foundAsset = data.estate.assets.find((a: Asset) => a.id === assetId);
+                    if (foundAsset) {
+                        setAsset(foundAsset);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch asset:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const fetchNextActions = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/assets/${assetId}/next-actions`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    setNextActions(data.recommendations);
+                }
+            } catch (error) {
+                console.error('Failed to fetch next actions:', error);
+            }
+        };
+
         if (assetId) {
             fetchAssetDetails();
             fetchNextActions();
@@ -54,61 +96,26 @@ const AssetDetail = () => {
     }, [assetId]);
 
     useEffect(() => {
+        const fetchForms = async () => {
+            if (!asset) return;
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/forms/institution/${encodeURIComponent(asset.institution)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    setForms(data.forms);
+                }
+            } catch (error) {
+                console.error('Failed to fetch forms:', error);
+            }
+        };
+
         if (asset) {
             fetchForms();
         }
     }, [asset]);
-
-    const fetchAssetDetails = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/estates/dashboard', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            if (data.success) {
-                const foundAsset = data.estate.assets.find((a: Asset) => a.id === assetId);
-                if (foundAsset) {
-                    setAsset(foundAsset);
-                }
-            }
-        } catch (error) {
-            console.error('Failed to fetch asset:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchNextActions = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`/api/assets/${assetId}/next-actions`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            if (data.success) {
-                setNextActions(data.recommendations);
-            }
-        } catch (error) {
-            console.error('Failed to fetch next actions:', error);
-        }
-    };
-
-    const fetchForms = async () => {
-        if (!asset) return;
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`/api/forms/institution/${encodeURIComponent(asset.institution)}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            if (data.success) {
-                setForms(data.forms);
-            }
-        } catch (error) {
-            console.error('Failed to fetch forms:', error);
-        }
-    };
 
     const getPriorityIcon = (priority: string) => {
         switch (priority) {
@@ -189,6 +196,7 @@ const AssetDetail = () => {
                                 Asset Value
                             </div>
                             <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                 ${parseFloat(asset.value as any).toLocaleString()}
                             </div>
                         </div>
@@ -274,6 +282,7 @@ const AssetDetail = () => {
                             </span>
                         </div>
                         <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--color-success)' }}>
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             ${parseFloat(asset.value as any).toLocaleString()}
                         </div>
                         <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
@@ -309,7 +318,7 @@ const AssetDetail = () => {
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--space-md)' }}>
-                            {forms.map((form: any) => (
+                            {forms.map((form) => (
                                 <div
                                     key={form.id}
                                     style={{

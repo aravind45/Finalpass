@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle2, Clock, Phone, MessageSquare, Send, AlertTriangle, FileText, ChevronRight, ShieldAlert, BadgeCheck, PenTool, Printer } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, FileText, ChevronRight, BadgeCheck, PenTool } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -32,7 +32,7 @@ const AssetClosure = () => {
         ]
     };
 
-    const [logs, setLogs] = useState([
+    const [logs] = useState([
         { id: 1, type: 'system', msg: 'Concierge: Analyzed "Fidelity Statement_Oct.pdf". Detected JTWROS.', date: '2 days ago' },
         { id: 2, type: 'system', msg: 'Concierge: Pre-filled "Non-Retirement Transfer Form".', date: '1 day ago' }
     ]);

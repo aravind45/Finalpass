@@ -1,0 +1,104 @@
+
+> frontend@0.0.0 lint
+> eslint .
+
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\components\CommunicationLog.tsx
+  45:40  error    Unexpected any. Specify a different type                                                                                                   @typescript-eslint/no-explicit-any
+  50:8   warning  React Hook useEffect has missing dependencies: 'fetchCommunications' and 'fetchStats'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\components\ui\badge.tsx
+  36:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\components\ui\button.tsx
+  57:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\components\ui\textarea.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\AssetClosure.tsx
+   1:35   error  'Clock' is defined but never used             @typescript-eslint/no-unused-vars
+   1:42   error  'Phone' is defined but never used             @typescript-eslint/no-unused-vars
+   1:49   error  'MessageSquare' is defined but never used     @typescript-eslint/no-unused-vars
+   1:64   error  'Send' is defined but never used              @typescript-eslint/no-unused-vars
+   1:70   error  'AlertTriangle' is defined but never used     @typescript-eslint/no-unused-vars
+   1:109  error  'ShieldAlert' is defined but never used       @typescript-eslint/no-unused-vars
+   1:143  error  'Printer' is defined but never used           @typescript-eslint/no-unused-vars
+  35:18   error  'setLogs' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\AssetDetail.tsx
+   12:5   error    'Plus' is defined but never used                                                                                                               @typescript-eslint/no-unused-vars
+   45:12  error    'showAddComm' is assigned a value but never used                                                                                               @typescript-eslint/no-unused-vars
+   45:25  error    'setShowAddComm' is assigned a value but never used                                                                                            @typescript-eslint/no-unused-vars
+   47:40  error    Unexpected any. Specify a different type                                                                                                       @typescript-eslint/no-explicit-any
+   54:8   warning  React Hook useEffect has missing dependencies: 'fetchAssetDetails' and 'fetchNextActions'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+   60:8   warning  React Hook useEffect has a missing dependency: 'fetchForms'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  192:61  error    Unexpected any. Specify a different type                                                                                                       @typescript-eslint/no-explicit-any
+  277:57  error    Unexpected any. Specify a different type                                                                                                       @typescript-eslint/no-explicit-any
+  312:47  error    Unexpected any. Specify a different type                                                                                                       @typescript-eslint/no-explicit-any
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\Assets.tsx
+  105:19  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\Assets.tsx:105:19
+  103 |     ];
+  104 |
+> 105 |     const table = useReactTable({
+      |                   ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  106 |         data: assets || [],
+  107 |         columns,
+  108 |         getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\Checklist.tsx
+  2:10  error  'CheckCircle2' is defined but never used  @typescript-eslint/no-unused-vars
+  2:24  error  'Circle' is defined but never used        @typescript-eslint/no-unused-vars
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\Dashboard.tsx
+    6:52  error  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+    9:10  error  'Separator' is defined but never used        @typescript-eslint/no-unused-vars
+   61:79  error  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+   80:94  error  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  213:81  error  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\DigitalAssets.tsx
+  3:51  error  'AlertTriangle' is defined but never used     @typescript-eslint/no-unused-vars
+  5:29  error  'CardHeader' is defined but never used        @typescript-eslint/no-unused-vars
+  5:41  error  'CardTitle' is defined but never used         @typescript-eslint/no-unused-vars
+  5:52  error  'CardDescription' is defined but never used   @typescript-eslint/no-unused-vars
+  9:10  error  'Alert' is defined but never used             @typescript-eslint/no-unused-vars
+  9:17  error  'AlertDescription' is defined but never used  @typescript-eslint/no-unused-vars
+  9:35  error  'AlertTitle' is defined but never used        @typescript-eslint/no-unused-vars
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\Discovery.tsx
+    7:29  error  'CardHeader' is defined but never used           @typescript-eslint/no-unused-vars
+    7:41  error  'CardTitle' is defined but never used            @typescript-eslint/no-unused-vars
+    7:52  error  'CardDescription' is defined but never used      @typescript-eslint/no-unused-vars
+    7:69  error  'CardFooter' is defined but never used           @typescript-eslint/no-unused-vars
+   13:11  error  'navigate' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   15:12  error  'loading' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   15:21  error  'setLoading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   18:44  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  147:89  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\Documents.tsx
+    5:16  error  'CardContent' is defined but never used       @typescript-eslint/no-unused-vars
+  126:12  error  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\Family.tsx
+   5:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:74  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\Intake.tsx
+   3:20  error  'useRef' is defined but never used        @typescript-eslint/no-unused-vars
+  15:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\Login.tsx
+  63:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\aravi\Documents\AI_LLM\projects\FinalPass\frontend\src\pages\Register.tsx
+  99:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 54 problems (50 errors, 4 warnings)
+

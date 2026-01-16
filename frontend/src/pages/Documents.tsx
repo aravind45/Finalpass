@@ -1,7 +1,12 @@
-import { motion } from 'framer-motion';
-import { CheckCircle2, AlertCircle, HelpCircle, ExternalLink, Phone, Mail, Settings, FileText } from 'lucide-react';
+import { CheckCircle2, AlertCircle, HelpCircle, ExternalLink, Phone, Mail, Settings, FileText, ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Document {
     id: string;
@@ -116,7 +121,6 @@ const ESTATE_DOCUMENTS: Record<string, Document[]> = {
 
 const Documents = () => {
     const navigate = useNavigate();
-    const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
     const [estateType, setEstateType] = useState<string>('SIMPLE_PROBATE');
     const [documents, setDocuments] = useState<Document[]>(ESTATE_DOCUMENTS['SIMPLE_PROBATE']);
     const [loading, setLoading] = useState(true);
@@ -199,17 +203,6 @@ const Documents = () => {
         }
     };
 
-    const getStatusColor = (status: Document['status']) => {
-        switch (status) {
-            case 'have':
-                return 'var(--accent-sage-soft)';
-            case 'missing':
-                return 'var(--accent-orange-soft)';
-            case 'pending':
-                return 'var(--accent-blue-soft)';
-        }
-    };
-
     const categorizedDocs = {
         legal: documents.filter(d => d.category === 'legal'),
         financial: documents.filter(d => d.category === 'financial'),
@@ -225,277 +218,171 @@ const Documents = () => {
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #fdfcf8 0%, #e0f2fe 100%)',
-            padding: '2rem'
-        }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    style={{ marginBottom: '2rem' }}
-                >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                            <button
-                                onClick={() => navigate('/dashboard')}
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--accent-blue)',
-                                    cursor: 'pointer',
-                                    marginBottom: '1rem',
-                                    fontSize: '0.9rem'
-                                }}
-                            >
-                                ← Back to Dashboard
-                            </button>
-                            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Document Checklist</h1>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
-                                Based on Estate Type: <strong>{estateType.replace('_', ' ')}</strong>
-                            </p>
-                        </div>
+        <div className="p-8 max-w-7xl mx-auto space-y-8 bg-muted/20 min-h-screen">
+            {loading && <div className="text-center py-10">Loading documents...</div>}
 
-                        {/* Actions */}
-                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                            <button
-                                onClick={handleGenerateDocument}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    background: 'var(--accent-blue)',
-                                    color: 'white',
-                                    border: 'none',
-                                    padding: '0.75rem 1.5rem',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                }}
-                            >
-                                <FileText className="w-4 h-4" />
-                                Generate Will PDF
-                            </button>
+            <div className={`space-y-4 ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
+                <Button variant="ghost" onClick={() => navigate('/dashboard')} className="pl-0 hover:bg-transparent text-primary hover:text-primary/80">
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+                </Button>
 
-                            {/* Dev Tool: Switch Estate Type */}
-                            <div style={{
-                                background: 'white',
-                                padding: '1rem',
-                                borderRadius: '12px',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                border: '1px solid var(--border-color)'
-                            }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                                    <Settings className="w-4 h-4" />
-                                    <span>Dev: Switch Estate Type</span>
-                                </div>
-                                <select
-                                    value={estateType}
-                                    onChange={(e) => handleTypeChange(e.target.value)}
-                                    style={{
-                                        padding: '0.5rem',
-                                        borderRadius: '6px',
-                                        border: '1px solid #cbd5e1',
-                                        fontSize: '0.9rem'
-                                    }}
-                                >
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Document Checklist</h1>
+                        <p className="text-muted-foreground text-lg">
+                            Tracking: <strong>{estateType.replace('_', ' ')}</strong>
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 items-center">
+                        <div className="flex items-center gap-2 bg-card p-1 rounded-md border shadow-sm">
+                            <Settings className="w-4 h-4 ml-2 text-muted-foreground" />
+                            <Select value={estateType} onValueChange={handleTypeChange}>
+                                <SelectTrigger className="w-[200px] border-0 focus:ring-0">
+                                    <SelectValue placeholder="Estate Type" />
+                                </SelectTrigger>
+                                <SelectContent>
                                     {Object.keys(ESTATE_DOCUMENTS).map(type => (
-                                        <option key={type} value={type}>{type.replace('_', ' ')}</option>
+                                        <SelectItem key={type} value={type}>{type.replace('_', ' ')}</SelectItem>
                                     ))}
-                                </select>
-                            </div>
+                                </SelectContent>
+                            </Select>
                         </div>
-                    </div>
-                </motion.div>
 
-                {/* Progress Stats */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '1rem',
-                    marginBottom: '2rem'
-                }}>
-                    <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--accent-blue)' }}>
-                            {stats.have}/{stats.total}
-                        </div>
-                        <div style={{ color: 'var(--text-muted)' }}>Documents Ready</div>
-                    </div>
-                    <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--accent-orange)' }}>
-                            {stats.missing}
-                        </div>
-                        <div style={{ color: 'var(--text-muted)' }}>Still Needed</div>
-                    </div>
-                    <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text-blue)' }}>
-                            {stats.pending}
-                        </div>
-                        <div style={{ color: 'var(--text-muted)' }}>In Progress</div>
+                        <Button onClick={handleGenerateDocument} className="w-full sm:w-auto">
+                            <FileText className="w-4 h-4 mr-2" />
+                            Generate Will PDF
+                        </Button>
                     </div>
                 </div>
 
-                {/* Document Categories */}
-                {Object.entries(categorizedDocs).map(([category, docs]) => (
-                    docs.length > 0 && (
-                        <motion.div
-                            key={category}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            style={{ marginBottom: '2rem' }}
-                        >
-                            <h2 style={{
-                                fontSize: '1.5rem',
-                                marginBottom: '1rem',
-                                textTransform: 'capitalize',
-                                color: 'var(--text-primary)'
-                            }}>
-                                {category} Documents
-                            </h2>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                {docs.map(doc => (
-                                    <div
-                                        key={doc.id}
-                                        className="glass-card"
-                                        style={{
-                                            padding: '1.5rem',
-                                            cursor: 'pointer',
-                                            borderLeft: `4px solid ${getStatusColor(doc.status)}`,
-                                            transition: 'transform 0.2s',
-                                        }}
-                                        onClick={() => setSelectedDoc(selectedDoc?.id === doc.id ? null : doc)}
-                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
-                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                                            <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
-                                                <div style={{
-                                                    background: getStatusColor(doc.status),
-                                                    padding: '0.75rem',
-                                                    borderRadius: '12px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center'
-                                                }}>
+                {/* Progress Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-4xl text-emerald-600">{stats.have}/{stats.total}</CardTitle>
+                            <CardDescription>Documents Ready</CardDescription>
+                        </CardHeader>
+                    </Card>
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-4xl text-orange-600">{stats.missing}</CardTitle>
+                            <CardDescription>Still Needed</CardDescription>
+                        </CardHeader>
+                    </Card>
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-4xl text-blue-600">{stats.pending}</CardTitle>
+                            <CardDescription>In Progress</CardDescription>
+                        </CardHeader>
+                    </Card>
+                </div>
+            </div>
+
+            {/* Document Categories */}
+            {Object.entries(categorizedDocs).map(([category, docs]) => (
+                docs.length > 0 && (
+                    <div key={category} className="space-y-4">
+                        <h2 className="text-2xl font-semibold capitalize">{category} Documents</h2>
+                        <div className="grid grid-cols-1 gap-4">
+                            {docs.map(doc => (
+                                <Card key={doc.id} className={`border-l-4 ${doc.status === 'have' ? 'border-l-emerald-500' :
+                                    doc.status === 'missing' ? 'border-l-orange-500' :
+                                        'border-l-blue-500'
+                                    }`}>
+                                    <div className="p-6">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex gap-4 items-start flex-1">
+                                                <div className={`p-3 rounded-xl ${doc.status === 'have' ? 'bg-emerald-100' :
+                                                    doc.status === 'missing' ? 'bg-orange-100' :
+                                                        'bg-blue-100'
+                                                    }`}>
                                                     {getStatusIcon(doc.status)}
                                                 </div>
-                                                <div style={{ flex: 1 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                                                        <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{doc.name}</h3>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h3 className="font-semibold text-lg">{doc.name}</h3>
                                                         {doc.required && (
-                                                            <span style={{
-                                                                background: 'var(--accent-orange)',
-                                                                color: 'white',
-                                                                padding: '0.125rem 0.5rem',
-                                                                borderRadius: '12px',
-                                                                fontSize: '0.7rem',
-                                                                fontWeight: 'bold'
-                                                            }}>
-                                                                REQUIRED
-                                                            </span>
+                                                            <Badge variant="secondary" className="bg-orange-100 text-orange-700 hover:bg-orange-100">REQUIRED</Badge>
                                                         )}
                                                     </div>
                                                     {doc.institution && (
-                                                        <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                                            For: {doc.institution}
-                                                        </p>
+                                                        <p className="text-sm text-muted-foreground mb-2">For: {doc.institution}</p>
                                                     )}
-                                                    <p style={{
-                                                        margin: '0.5rem 0 0 0',
-                                                        fontSize: '0.85rem',
-                                                        color: doc.status === 'have' ? 'var(--text-success)' : 'var(--text-muted)'
-                                                    }}>
+                                                    <p className={`text-sm ${doc.status === 'have' ? 'text-emerald-600 font-medium' : 'text-muted-foreground'
+                                                        }`}>
                                                         {doc.status === 'have' && '✓ You have this document'}
-                                                        {doc.status === 'missing' && '⚠ Click to see how to obtain'}
-                                                        {doc.status === 'pending' && '⏳ Waiting for this document'}
+                                                        {doc.status === 'missing' && '⚠ Action needed'}
+                                                        {doc.status === 'pending' && '⏳ In progress'}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Expandable "How to Obtain" Section */}
-                                        {selectedDoc?.id === doc.id && doc.howToObtain && (
-                                            <motion.div
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: 'auto' }}
-                                                exit={{ opacity: 0, height: 0 }}
-                                                style={{
-                                                    marginTop: '1.5rem',
-                                                    paddingTop: '1.5rem',
-                                                    borderTop: '1px solid var(--border-color)'
-                                                }}
-                                            >
-                                                <h4 style={{ margin: '0 0 1rem 0', color: 'var(--accent-blue)' }}>
-                                                    How to Obtain This Document
-                                                </h4>
+                                        {doc.howToObtain && doc.status !== 'have' && (
+                                            <Accordion type="single" collapsible className="mt-4">
+                                                <AccordionItem value="item-1" className="border-0">
+                                                    <AccordionTrigger className="py-2 text-sm text-blue-600 hover:text-blue-700 hover:no-underline font-medium">
+                                                        How to obtain this document?
+                                                    </AccordionTrigger>
+                                                    <AccordionContent className="pt-2 pb-0">
+                                                        <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                                                            <div className="flex items-center gap-2 text-sm">
+                                                                <Mail className="w-4 h-4 text-blue-500" />
+                                                                <span className="font-medium">Method:</span>
+                                                                <span>{doc.howToObtain.method}</span>
+                                                            </div>
 
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                        <Mail className="w-4 h-4 text-blue-500" />
-                                                        <strong>Method:</strong> {doc.howToObtain.method}
-                                                    </div>
+                                                            {doc.howToObtain.contact && (
+                                                                <div className="flex items-center gap-2 text-sm">
+                                                                    <Phone className="w-4 h-4 text-blue-500" />
+                                                                    <span className="font-medium">Contact:</span>
+                                                                    <span>{doc.howToObtain.contact}</span>
+                                                                </div>
+                                                            )}
 
-                                                    {doc.howToObtain.contact && (
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <Phone className="w-4 h-4 text-blue-500" />
-                                                            <strong>Contact:</strong> {doc.howToObtain.contact}
+                                                            {doc.howToObtain.estimatedTime && (
+                                                                <div className="flex items-center gap-2 text-sm">
+                                                                    <HelpCircle className="w-4 h-4 text-blue-500" />
+                                                                    <span className="font-medium">Timeline:</span>
+                                                                    <span>{doc.howToObtain.estimatedTime}</span>
+                                                                </div>
+                                                            )}
+
+                                                            {doc.howToObtain.url && (
+                                                                <a
+                                                                    href={doc.howToObtain.url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:underline mt-1"
+                                                                >
+                                                                    <ExternalLink className="w-4 h-4" />
+                                                                    Download Form
+                                                                </a>
+                                                            )}
+
+                                                            {doc.howToObtain.tips && doc.howToObtain.tips.length > 0 && (
+                                                                <div className="bg-blue-50/50 p-3 rounded-md mt-2">
+                                                                    <strong className="block text-xs font-semibold text-blue-700 mb-1">💡 Tips</strong>
+                                                                    <ul className="list-disc list-inside text-xs text-blue-900/80 space-y-1">
+                                                                        {doc.howToObtain.tips.map((tip, i) => (
+                                                                            <li key={i}>{tip}</li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    )}
-
-                                                    {doc.howToObtain.estimatedTime && (
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <HelpCircle className="w-4 h-4 text-blue-500" />
-                                                            <strong>Timeline:</strong> {doc.howToObtain.estimatedTime}
-                                                        </div>
-                                                    )}
-
-                                                    {doc.howToObtain.url && (
-                                                        <a
-                                                            href={doc.howToObtain.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            style={{
-                                                                display: 'inline-flex',
-                                                                alignItems: 'center',
-                                                                gap: '0.5rem',
-                                                                color: 'var(--accent-blue)',
-                                                                textDecoration: 'none',
-                                                                fontWeight: 'bold'
-                                                            }}
-                                                        >
-                                                            <ExternalLink className="w-4 h-4" />
-                                                            Download Form
-                                                        </a>
-                                                    )}
-
-                                                    {doc.howToObtain.tips && doc.howToObtain.tips.length > 0 && (
-                                                        <div style={{
-                                                            background: 'var(--accent-blue-soft)',
-                                                            padding: '1rem',
-                                                            borderRadius: '12px',
-                                                            marginTop: '0.5rem'
-                                                        }}>
-                                                            <strong style={{ display: 'block', marginBottom: '0.5rem' }}>💡 Important Tips:</strong>
-                                                            <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
-                                                                {doc.howToObtain.tips.map((tip, i) => (
-                                                                    <li key={i} style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>{tip}</li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </motion.div>
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            </Accordion>
                                         )}
                                     </div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    )
-                ))}
-            </div>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                )
+            ))}
         </div>
     );
 };

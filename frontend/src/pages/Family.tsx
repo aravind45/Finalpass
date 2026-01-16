@@ -1,8 +1,14 @@
 import { Copy, Mail, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+interface Stakeholder {
+    id: string;
+    type: string;
+    info: string;
+}
+
 const Family = () => {
-    const [beneficiaries, setBeneficiaries] = useState<any[]>([]);
+    const [beneficiaries, setBeneficiaries] = useState<Stakeholder[]>([]);
     const [estateId, setEstateId] = useState<string | null>(null);
     const [updateContent, setUpdateContent] = useState(`Hi Everyone,
 
@@ -31,7 +37,7 @@ There is no action needed from you at this time. I will send another update next
                     setEstateId(data.estate.id);
                     if (data.estate.stakeholders) {
                         // Filter specifically for extracted Beneficiaries
-                        const bens = data.estate.stakeholders.filter((s: any) => s.type === 'BENEFICIARY');
+                        const bens = data.estate.stakeholders.filter((s: Stakeholder) => s.type === 'BENEFICIARY');
                         setBeneficiaries(bens);
                     }
                 }

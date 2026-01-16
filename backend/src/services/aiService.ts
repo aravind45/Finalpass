@@ -76,6 +76,44 @@ Please let me know if you require any further information.
 Sincerely,
 [Executor Name]`;
     }
+    async analyzeDocument(text: string): Promise<any[]> {
+        if (!this.client) {
+            console.warn('AI Service not configured. Returning mock analysis.');
+            return [{ institution: 'Mock Bank', type: 'Checking', value: '1000.00', confidence: 0.9 }];
+        }
+
+        const prompt = `
+            Analyze the following text from a financial document (e.g., Tax Return, Bank Statement).
+            Identify any potential assets, accounts, or income sources.
+            
+            Text:
+            "${text.substring(0, 3000)}"
+
+            Return ONLY a raw JSON array of objects with these fields:
+            - institution (string)
+            - type (string, e.g., "Bank Account", "Stock", "Real Estate")
+            - value (string or null, estimate if possible)
+            - confidence (number, 0-1)
+
+            Do not include markdown formatting or code blocks. Just the JSON string.
+        `.trim();
+
+        try {
+            const completion = await this.client.chat.completions.create({
+                messages: [{ role: 'user', content: prompt }],
+                model: this.model,
+                temperature: 0.1, // Low temperature for extraction
+            });
+
+            const content = completion.choices[0]?.message?.content || '[]';
+            // Clean up if model adds markdown
+            const jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(jsonStr);
+        } catch (error) {
+            console.error('LLM Analysis Failed:', error);
+            return [];
+        }
+    }
 }
 
 export const aiService = new AiService();

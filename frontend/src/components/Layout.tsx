@@ -22,7 +22,9 @@ const Layout = () => {
     const menuItems = [
         { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
         { path: '/intake', label: 'Scan Intake', icon: FolderOpen },
-        { path: '/assets', label: 'Assets', icon: Gem },
+        { path: '/assets', label: 'Assets', icon: Grid },
+        { path: '/digital-assets', label: 'Digital Vault', icon: Lock },
+        { path: '/discovery', label: 'Detective', icon: Search },
         { path: '/checklist', label: 'Checklist', icon: CheckSquare },
         { path: '/documents', label: 'Documents', icon: FileText },
         { path: '/communications', label: 'Communications', icon: MessageSquare },

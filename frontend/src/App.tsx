@@ -11,6 +11,8 @@ import Checklist from './pages/Checklist';
 import Communications from './pages/Communications';
 import Family from './pages/Family';
 import AssetClosure from './pages/AssetClosure';
+import Discovery from './pages/Discovery';
+import DigitalAssets from './pages/DigitalAssets';
 import Layout from './components/Layout';
 
 function App() {
@@ -32,6 +34,8 @@ function App() {
           <Route path="/communications" element={<Communications />} />
           <Route path="/family" element={<Family />} />
           <Route path="/asset-closure" element={<AssetClosure />} />
+          <Route path="/discovery" element={<Discovery />} />
+          <Route path="/digital-assets" element={<DigitalAssets />} />
         </Route>
       </Routes>
     </Router>

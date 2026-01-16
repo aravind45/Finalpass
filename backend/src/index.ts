@@ -10,7 +10,9 @@ import authRoutes from './routes/auth.js';
 import estateRoutes from './routes/estate.js';
 import documentRoutes from './routes/documents.js';
 import communicationRoutes from './routes/communication.js';
+
 import aiRoutes from './routes/aiRoutes.js';
+import discoveryRoutes from './routes/discovery.js';
 import assetCommunicationRoutes from './routes/assetCommunication.js';
 import formRoutes from './routes/forms.js';
 
@@ -60,6 +62,7 @@ app.use('/api/estates', estateRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/discovery', discoveryRoutes);
 app.use('/api/assets', assetCommunicationRoutes);
 app.use('/api/forms', formRoutes);
 

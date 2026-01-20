@@ -119,19 +119,45 @@ model Asset {
   id           String      @id @default(uuid())
   estateId     String
   estate       Estate      @relation(fields: [estateId], references: [id])
-  type         String
+  
+  // Basic Info
+  type         String      // checking_account, 401k, life_insurance, etc.
   institution  String
-  status       String      @default("DISCOVERED") // Was Enum
-  value        Decimal?    // SQLite supports Decimal via Prisma (mapped to String/Float)
+  accountNumber String?
+  value        Decimal?
+  
+  // Categorization
+  category     String      @default("other") // financial, retirement, insurance, employer, property, other
+  priority     String      @default("medium") // low, medium, high, urgent
+  
+  // Status Tracking
+  status       String      @default("DISCOVERED") // DISCOVERED, CONTACTED, DOCUMENTS_SUBMITTED, IN_REVIEW, APPROVED, DISTRIBUTED, CLOSED
+  lastContactDate DateTime?
+  nextFollowUpDate DateTime?
+  
+  // Contact Information
+  institutionPhone String?
+  institutionEmail String?
+  institutionFax   String?
+  contactPerson    String?
+  
+  // Metadata
   requirements String      // stored as JSON string
   metadata     String?     // stored as JSON string
+  
+  // Relationships
   communications Communication[]
   assetCommunications AssetCommunication[]
   escalations  Escalation[]
+  checklists   AssetChecklist[]
+  
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
   @@index([estateId])
+  @@index([status])
+  @@index([category])
+  @@index([nextFollowUpDate])
 }
 
 model Communication {
@@ -283,4 +309,31 @@ model Fax {
   @@index([assetId])
   @@index([status])
   @@index([createdAt])
+}
+
+// New: Asset Checklist
+model AssetChecklist {
+  id              String    @id @default(uuid())
+  assetId         String
+  asset           Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  // Checklist Item
+  itemType        String    // document, form, action
+  itemName        String
+  description     String?
+  required        Boolean   @default(true)
+  
+  // Status
+  completed       Boolean   @default(false)
+  completedDate   DateTime?
+  completedBy     String?
+  
+  // Order
+  sortOrder       Int       @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([assetId])
+  @@index([completed])
 }

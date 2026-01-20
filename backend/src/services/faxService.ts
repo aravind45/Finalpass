@@ -2,6 +2,7 @@ import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs/promises';
 import path from 'path';
+import { assetStatusService } from './assetStatusService.js';
 
 const prisma = new PrismaClient();
 
@@ -21,7 +22,7 @@ interface FaxStatus {
     status: 'pending' | 'sending' | 'sent' | 'failed' | 'delivered';
     providerStatus?: string;
     errorMessage?: string;
-    deliveredAt?: Date;
+    deliveredAt?: Date | null;
 }
 
 export class FaxService {
@@ -51,8 +52,9 @@ export class FaxService {
             });
 
             if (response.data && response.data.result && response.data.result.token) {
-                this.sessionToken = response.data.result.token;
-                return this.sessionToken;
+                const token = response.data.result.token;
+                this.sessionToken = token;
+                return token;
             }
 
             throw new Error('Failed to get session token from PamFax');
@@ -69,7 +71,7 @@ export class FaxService {
         // Save PDF to temporary location
         const tempDir = path.join(process.cwd(), 'uploads', 'faxes');
         await fs.mkdir(tempDir, { recursive: true });
-        
+
         const tempFilePath = path.join(tempDir, `${Date.now()}-${options.documentName}.pdf`);
         await fs.writeFile(tempFilePath, options.pdfBuffer);
 
@@ -149,7 +151,7 @@ export class FaxService {
             return fax.id;
         } catch (error: any) {
             console.error('Failed to send fax:', error.message);
-            
+
             // Update fax record with error
             const faxRecord = await prisma.fax.findFirst({
                 where: { filePath: tempFilePath },
@@ -184,7 +186,7 @@ export class FaxService {
 
             try {
                 const status = await this.getFaxStatus(providerFaxId);
-                
+
                 await prisma.fax.update({
                     where: { id: faxId },
                     data: {
@@ -194,6 +196,9 @@ export class FaxService {
                         deliveredAt: status.deliveredAt
                     }
                 });
+
+                // Update asset status automatically
+                await assetStatusService.updateStatusFromFax(faxId, status.status);
 
                 // Stop monitoring if fax is in final state
                 if (['sent', 'failed', 'delivered'].includes(status.status)) {
@@ -211,7 +216,7 @@ export class FaxService {
     async getFaxStatus(providerFaxId: string): Promise<FaxStatus> {
         try {
             const token = await this.authenticate();
-            
+
             const response = await axios.post(
                 `${this.baseUrl}/FaxJob/GetState`,
                 {
@@ -221,7 +226,7 @@ export class FaxService {
             );
 
             const state = response.data?.result?.state;
-            
+
             // Map PamFax states to our states
             const statusMap: { [key: string]: FaxStatus['status'] } = {
                 'queued': 'sending',
@@ -235,7 +240,7 @@ export class FaxService {
             return {
                 status: statusMap[state] || 'pending',
                 providerStatus: state,
-                deliveredAt: state === 'delivered' ? new Date() : undefined
+                deliveredAt: state === 'delivered' ? new Date() : null
             };
         } catch (error: any) {
             console.error('Failed to get fax status:', error.message);

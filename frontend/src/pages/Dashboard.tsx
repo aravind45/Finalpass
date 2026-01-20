@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import FollowUpWidget from '@/components/FollowUpWidget';
 
 interface Asset {
     id: string;
@@ -176,6 +177,17 @@ const Dashboard = () => {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Follow-Up Widget */}
+            {estate && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                >
+                    <FollowUpWidget estateId={estate.id} />
+                </motion.div>
+            )}
 
             {/* Assets List */}
             <div className="space-y-4">

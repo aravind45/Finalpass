@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import CommunicationLog from '../components/CommunicationLog';
 import SendFaxModal from '../components/SendFaxModal';
+import AssetChecklist from '../components/AssetChecklist';
 
 interface Asset {
     id: string;
@@ -128,21 +129,24 @@ const AssetDetail = () => {
 
     if (loading) {
         return (
-            <div className="loading">
-                <div className="spinner"></div>
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     if (!asset) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-xl)' }}>
-                <div className="empty-state">
-                    <div className="empty-state-title">Asset Not Found</div>
-                    <p className="empty-state-description">
+            <div className="min-h-screen flex items-center justify-center p-8">
+                <div className="text-center space-y-4">
+                    <h2 className="text-2xl font-semibold text-foreground">Asset Not Found</h2>
+                    <p className="text-muted-foreground max-w-md">
                         We couldn't find this asset. It may have been removed or you may not have access to it.
                     </p>
-                    <button onClick={() => navigate('/dashboard')} className="btn btn-primary">
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                    >
                         Return to Dashboard
                     </button>
                 </div>
@@ -152,50 +156,45 @@ const AssetDetail = () => {
 
     const metadata = asset.metadata ? JSON.parse(asset.metadata) : {};
     const statusInfo = {
-        'CONTACTED': { label: 'In Progress', color: 'var(--color-accent)' },
-        'DISTRIBUTED': { label: 'Complete', color: 'var(--color-success)' },
-        'Processing': { label: 'Processing', color: 'var(--color-warning)' }
-    }[asset.status] || { label: asset.status, color: 'var(--color-text-muted)' };
+        'CONTACTED': { label: 'In Progress', color: 'text-amber-600', bg: 'bg-amber-100' },
+        'DISTRIBUTED': { label: 'Complete', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+        'Processing': { label: 'Processing', color: 'text-blue-600', bg: 'bg-blue-100' }
+    }[asset.status] || { label: asset.status, color: 'text-slate-500', bg: 'bg-slate-100' };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            padding: 'var(--space-xl)',
-            background: 'var(--color-bg-secondary)'
-        }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="min-h-screen p-4 sm:p-6 lg:p-8 bg-muted/30">
+            <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    style={{ marginBottom: 'var(--space-xl)' }}
+                    className="space-y-4"
                 >
                     <button
                         onClick={() => navigate('/dashboard')}
-                        className="btn btn-ghost mb-3"
-                        style={{ padding: 'var(--space-xs) var(--space-sm)' }}
+                        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                        <ArrowLeft style={{ width: '1rem', height: '1rem' }} />
+                        <ArrowLeft className="w-4 h-4" />
                         Back to Dashboard
                     </button>
 
-                    <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between' }}>
-                        <div>
-                            <h1 style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, marginBottom: 'var(--space-xs)', color: 'var(--color-text-primary)' }}>
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                        <div className="space-y-2">
+                            <h1 className="text-3xl font-bold tracking-tight text-foreground">
                                 {asset.institution}
                             </h1>
-                            <p style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)' }}>
+                            <p className="text-lg text-muted-foreground">
                                 {asset.type}
                             </p>
-                            <span className="badge badge-info">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bg} ${statusInfo.color}`}>
                                 {statusInfo.label}
                             </span>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-xs)' }}>
+                        <div className="text-left sm:text-right">
+                            <div className="text-sm text-muted-foreground mb-1">
                                 Asset Value
                             </div>
-                            <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                            <div className="text-3xl font-bold text-foreground">
                                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                 ${parseFloat(asset.value as any).toLocaleString()}
                             </div>
@@ -208,41 +207,43 @@ const AssetDetail = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="alert alert-warning mb-5"
+                        className="bg-amber-50 border border-amber-200 rounded-lg p-4"
                     >
-                        {getPriorityIcon(nextActions[0].priority)}
-                        <div className="alert-content">
-                            <div className="alert-title">Action Recommended</div>
-                            {nextActions.map((action, index) => (
-                                <div key={index} style={{ marginBottom: index < nextActions.length - 1 ? 'var(--space-sm)' : 0 }}>
-                                    <p style={{ marginBottom: 'var(--space-xs)' }}>{action.message}</p>
-                                    <p style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 0 }}>
-                                        Suggested: {action.suggestedAction}
-                                    </p>
-                                </div>
-                            ))}
+                        <div className="flex items-start gap-3">
+                            {getPriorityIcon(nextActions[0].priority)}
+                            <div className="flex-1 space-y-2">
+                                <h3 className="font-semibold text-amber-900">Action Recommended</h3>
+                                {nextActions.map((action, index) => (
+                                    <div key={index} className="space-y-1">
+                                        <p className="text-sm text-amber-800">{action.message}</p>
+                                        <p className="text-sm font-semibold text-amber-900">
+                                            Suggested: {action.suggestedAction}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </motion.div>
                 )}
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-3 mb-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="card card-compact"
+                        className="bg-card border border-border rounded-lg p-6 space-y-3"
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
-                            <Building2 style={{ width: '1.25rem', height: '1.25rem', color: 'var(--color-accent)' }} />
-                            <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                        <div className="flex items-center gap-2">
+                            <Building2 className="w-5 h-5 text-primary" />
+                            <span className="text-sm font-semibold text-muted-foreground">
                                 Institution
                             </span>
                         </div>
-                        <div style={{ fontSize: 'var(--font-size-base)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                        <div className="text-base font-semibold text-foreground">
                             {asset.institution}
                         </div>
-                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                        <div className="text-sm text-muted-foreground">
                             {asset.type}
                         </div>
                     </motion.div>
@@ -251,19 +252,19 @@ const AssetDetail = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="card card-compact"
+                        className="bg-card border border-border rounded-lg p-6 space-y-3"
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
-                            <MessageSquare style={{ width: '1.25rem', height: '1.25rem', color: 'var(--color-accent)' }} />
-                            <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                        <div className="flex items-center gap-2">
+                            <MessageSquare className="w-5 h-5 text-primary" />
+                            <span className="text-sm font-semibold text-muted-foreground">
                                 Status
                             </span>
                         </div>
-                        <div style={{ fontSize: 'var(--font-size-base)', fontWeight: 600, color: statusInfo.color }}>
+                        <div className={`text-base font-semibold ${statusInfo.color}`}>
                             {statusInfo.label}
                         </div>
                         {metadata.lastContact && (
-                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                            <div className="text-sm text-muted-foreground">
                                 Last contact: {new Date(metadata.lastContact).toLocaleDateString()}
                             </div>
                         )}
@@ -273,19 +274,19 @@ const AssetDetail = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="card card-compact"
+                        className="bg-card border border-border rounded-lg p-6 space-y-3"
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
-                            <DollarSign style={{ width: '1.25rem', height: '1.25rem', color: 'var(--color-success)' }} />
-                            <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                        <div className="flex items-center gap-2">
+                            <DollarSign className="w-5 h-5 text-emerald-600" />
+                            <span className="text-sm font-semibold text-muted-foreground">
                                 Value
                             </span>
                         </div>
-                        <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--color-success)' }}>
+                        <div className="text-xl font-bold text-emerald-600">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             ${parseFloat(asset.value as any).toLocaleString()}
                         </div>
-                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                        <div className="text-sm text-muted-foreground">
                             As of date of death
                         </div>
                     </motion.div>
@@ -297,47 +298,42 @@ const AssetDetail = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="card mb-5"
+                        className="bg-card border border-border rounded-lg p-6 space-y-6"
                     >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)' }}>
-                            <div>
-                                <h3 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 600, marginBottom: 'var(--space-xs)', color: 'var(--color-text-primary)' }}>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                            <div className="space-y-1">
+                                <h3 className="text-xl font-semibold text-foreground">
                                     Forms & Documents
                                 </h3>
-                                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 0 }}>
+                                <p className="text-sm text-muted-foreground">
                                     Fill and fax forms directly to {asset.institution}
                                 </p>
                             </div>
                             <button
                                 onClick={() => setShowSendFax(true)}
-                                className="btn btn-primary"
+                                className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
                             >
-                                <Send style={{ width: '1rem', height: '1rem' }} />
+                                <Send className="w-4 h-4" />
                                 Send Fax
                             </button>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--space-md)' }}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {forms.map((form) => (
                                 <div
                                     key={form.id}
-                                    style={{
-                                        padding: 'var(--space-lg)',
-                                        background: 'var(--color-bg-tertiary)',
-                                        borderRadius: 'var(--radius-lg)',
-                                        border: '1px solid var(--color-border-light)'
-                                    }}
+                                    className="p-4 bg-muted/50 rounded-lg border border-border space-y-3"
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'start', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
-                                        <FileText style={{ width: '1.25rem', height: '1.25rem', color: 'var(--color-accent)', flexShrink: 0 }} />
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontSize: 'var(--font-size-base)', fontWeight: 600, marginBottom: 'var(--space-xs)', color: 'var(--color-text-primary)' }}>
+                                    <div className="flex items-start gap-3">
+                                        <FileText className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                                        <div className="flex-1 space-y-2">
+                                            <div className="font-semibold text-foreground">
                                                 {form.name}
                                             </div>
-                                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)' }}>
+                                            <div className="text-sm text-muted-foreground">
                                                 {form.description}
                                             </div>
-                                            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>
+                                            <div className="text-xs text-muted-foreground">
                                                 {form.pageCount} pages • ${(form.pageCount * 0.07).toFixed(2)} to fax
                                             </div>
                                         </div>
@@ -348,12 +344,22 @@ const AssetDetail = () => {
                     </motion.div>
                 )}
 
+                {/* Settlement Checklist */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.45 }}
+                    className="bg-card border border-border rounded-lg p-6"
+                >
+                    <AssetChecklist assetId={asset.id} />
+                </motion.div>
+
                 {/* Communication Log */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="card"
+                    className="bg-card border border-border rounded-lg p-6"
                 >
                     <CommunicationLog assetId={asset.id} institution={asset.institution} />
                 </motion.div>

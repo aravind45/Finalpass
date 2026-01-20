@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { estateService } from '../services/estateService.js';
 import { authService } from '../services/authService.js';
+import { assetStatusService } from '../services/assetStatusService.js';
 
 const router = Router();
 
@@ -25,6 +26,14 @@ router.get('/dashboard', requireAuth, async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;
         const estate = await estateService.getORCreateHomeEstate(userId);
+
+        // Advisor logic: Ensure checklists for all assets
+        if (estate && estate.assets) {
+            for (const asset of estate.assets) {
+                await assetStatusService.ensureInstitutionChecklist(asset.id);
+            }
+        }
+
         res.json({ success: true, estate });
     } catch (error: any) {
         console.error("Dashboard Error:", error);

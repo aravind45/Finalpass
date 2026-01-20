@@ -11,7 +11,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "vercel-build": "prisma generate && prisma migrate deploy && tsc",
+    "vercel-build": "npx prisma generate && npx prisma migrate deploy && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "prisma": {
@@ -41,6 +41,7 @@
     "multer": "^2.0.2",
     "openai": "^6.16.0",
     "pdf-lib": "^1.17.1",
+    "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"

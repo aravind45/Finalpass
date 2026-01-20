@@ -6,12 +6,13 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx --env-file=.env src/index.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "vercel-build": "npx prisma generate && npx prisma migrate deploy && tsc",
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "prisma": {

@@ -1,0 +1,17 @@
+commit cc7c2594ca0b78e35b71a69e59a300335bd5cfb2
+Author:     aravind45 <37077333+aravind45@users.noreply.github.com>
+AuthorDate: Tue Jan 20 12:27:47 2026 -0600
+Commit:     aravind45 <37077333+aravind45@users.noreply.github.com>
+CommitDate: Tue Jan 20 12:27:47 2026 -0600
+
+    feat: add follow-up system, fix navigation, add documentation, start asset organization
+    
+    - Fixed sidebar navigation with Tailwind v3 downgrade
+    - Created comprehensive technical architecture documentation
+    - Built automatic follow-up system with 7/14/21/30 day triggers
+    - Added FollowUpWidget component to dashboard
+    - Created asset category migration (financial, retirement, insurance, employer, property)
+    - Added Fidelity forms library with PDF templates
+    - Updated Prisma schema with category field
+    - Integrated follow-up routes and services
+    - Created detailed asset organization specification

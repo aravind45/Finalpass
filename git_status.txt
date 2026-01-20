@@ -1,0 +1,27 @@
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	backend/prisma/seed.d.ts
+	backend/prisma/seed.d.ts.map
+	backend/prisma/seed.js
+	backend/prisma/seed.js.map
+	backend/scripts/debug-upload.d.ts
+	backend/scripts/debug-upload.d.ts.map
+	backend/scripts/debug-upload.js
+	backend/scripts/debug-upload.js.map
+	backend/scripts/generate-fidelity-placeholders.ts
+	backend/scripts/test-pamfax.d.ts
+	backend/scripts/test-pamfax.d.ts.map
+	backend/scripts/test-pamfax.js
+	backend/scripts/test-pamfax.js.map
+	backend/typescript_errors_backend.txt
+	backend/verify_db.d.ts
+	backend/verify_db.d.ts.map
+	backend/verify_db.js
+	backend/verify_db.js.map
+	frontend/typescript_errors_frontend.txt
+	git_status.txt
+
+nothing added to commit but untracked files present (use "git add" to track)

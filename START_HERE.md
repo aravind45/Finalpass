@@ -2,6 +2,13 @@
 
 Welcome! This guide will help you deploy ExpectedEstate so you can test it as an end user.
 
+## ⚠️ Recent Fix (January 20, 2026)
+
+**Fixed:** "prisma: command not found" error during Vercel deployment
+- Pull the latest code: `git pull origin main`
+- Redeploy your backend in Vercel
+- The error should be resolved
+
 ---
 
 ## 📋 What You Need

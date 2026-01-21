@@ -1,1 +1,0 @@
-{"version":3,"file":"advocacyService.d.ts","sourceRoot":"","sources":["advocacyService.ts"],"names":[],"mappings":"AACA,MAAM,WAAW,eAAe;IAC5B,WAAW,EAAE,MAAM,CAAC;IACpB,WAAW,EAAE,MAAM,CAAC;IACpB,UAAU,EAAE,MAAM,CAAC;IACnB,YAAY,EAAE,MAAM,CAAC;CACxB;AAID,qBAAa,eAAe;IACxB,oCAAoC;WACvB,wBAAwB,CAAC,GAAG,EAAE,eAAe,GAAG,OAAO,CAAC,MAAM,CAAC;CAqB/E"}

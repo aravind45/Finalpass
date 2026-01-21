@@ -15,6 +15,7 @@ dist/
 *.d.ts.map
 *.js
 *.js.map
+!frontend/src/**/*.d.ts
 !frontend/src/**/*.js
 !frontend/src/**/*.jsx
 

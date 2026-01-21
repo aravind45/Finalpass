@@ -4,8 +4,6 @@ import { PrismaClient } from '@prisma/client';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import estateRoutes from './routes/estate.js';
 import documentRoutes from './routes/documents.js';
@@ -101,12 +99,6 @@ app.get('/db-health', async (req, res) => {
         res.status(500).json({ status: 'error', message: (err as Error).message });
     }
 });
-
-// Serve static files from the 'public' directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, '../public')));
-
 
 // Export app for Vercel (Serverless)
 export default app;

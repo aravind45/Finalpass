@@ -12,7 +12,7 @@ interface FollowUpRule {
 }
 
 interface FollowUpRecommendation {
-  assetId: number;
+  assetId: string;
   institution: string;
   assetType: string;
   value: number;
@@ -26,7 +26,6 @@ interface FollowUpRecommendation {
 
 export class FollowUpService {
   private rules: FollowUpRule[] = [
-    // General rules for all assets
     {
       assetType: 'all',
       status: 'CONTACTED',
@@ -75,7 +74,6 @@ export class FollowUpService {
       priority: 'urgent',
       message: 'Distribution approved but not received. Contact {institution} immediately about transfer.'
     },
-    // Asset-specific rules
     {
       assetType: '401k',
       status: 'CONTACTED',
@@ -94,10 +92,7 @@ export class FollowUpService {
     }
   ];
 
-  /**
-   * Get all follow-up recommendations for an estate
-   */
-  async getFollowUpRecommendations(estateId: number): Promise<FollowUpRecommendation[]> {
+  async getFollowUpRecommendations(estateId: string): Promise<FollowUpRecommendation[]> {
     const assets = await prisma.asset.findMany({
       where: {
         estateId,
@@ -106,7 +101,7 @@ export class FollowUpService {
         }
       },
       include: {
-        communications: {
+        assetCommunications: {
           orderBy: {
             createdAt: 'desc'
           },
@@ -118,11 +113,10 @@ export class FollowUpService {
     const recommendations: FollowUpRecommendation[] = [];
 
     for (const asset of assets) {
-      const lastCommunication = asset.communications[0];
+      const lastCommunication = asset.assetCommunications[0];
       const lastContactDate = lastCommunication?.createdAt || asset.createdAt;
       const daysSinceContact = this.calculateDaysSince(lastContactDate);
 
-      // Find applicable rules
       const applicableRules = this.rules.filter(rule => {
         const matchesType = rule.assetType === 'all' || rule.assetType === asset.type;
         const matchesStatus = rule.status === asset.status;
@@ -130,40 +124,35 @@ export class FollowUpService {
         return matchesType && matchesStatus && meetsThreshold;
       });
 
-      // Get highest priority rule
       if (applicableRules.length > 0) {
         const highestPriorityRule = this.getHighestPriorityRule(applicableRules);
-        
+
         recommendations.push({
           assetId: asset.id,
           institution: asset.institution,
           assetType: asset.type,
-          value: parseFloat(asset.value.toString()),
+          value: asset.value ? parseFloat(asset.value.toString()) : 0,
           daysSinceContact,
           lastContactDate,
           priority: highestPriorityRule.priority,
           action: highestPriorityRule.action,
           message: highestPriorityRule.message.replace('{institution}', asset.institution),
-          dueDate: new Date() // Due now
+          dueDate: new Date()
         });
       }
     }
 
-    // Sort by priority (urgent > high > medium > low)
     return recommendations.sort((a, b) => {
       const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     });
   }
 
-  /**
-   * Get follow-up recommendations for a specific asset
-   */
-  async getAssetFollowUpRecommendations(assetId: number): Promise<FollowUpRecommendation[]> {
+  async getAssetFollowUpRecommendations(assetId: string): Promise<FollowUpRecommendation[]> {
     const asset = await prisma.asset.findUnique({
       where: { id: assetId },
       include: {
-        communications: {
+        assetCommunications: {
           orderBy: {
             createdAt: 'desc'
           },
@@ -176,7 +165,7 @@ export class FollowUpService {
       return [];
     }
 
-    const lastCommunication = asset.communications[0];
+    const lastCommunication = asset.assetCommunications[0];
     const lastContactDate = lastCommunication?.createdAt || asset.createdAt;
     const daysSinceContact = this.calculateDaysSince(lastContactDate);
 
@@ -191,7 +180,7 @@ export class FollowUpService {
       assetId: asset.id,
       institution: asset.institution,
       assetType: asset.type,
-      value: parseFloat(asset.value.toString()),
+      value: asset.value ? parseFloat(asset.value.toString()) : 0,
       daysSinceContact,
       lastContactDate,
       priority: rule.priority,
@@ -201,22 +190,16 @@ export class FollowUpService {
     }));
   }
 
-  /**
-   * Check if an asset needs escalation
-   */
-  async needsEscalation(assetId: number): Promise<boolean> {
+  async needsEscalation(assetId: string): Promise<boolean> {
     const recommendations = await this.getAssetFollowUpRecommendations(assetId);
     return recommendations.some(r => r.action === 'escalate' || r.priority === 'urgent');
   }
 
-  /**
-   * Create escalation record
-   */
-  async createEscalation(assetId: number, reason: string, daysSinceContact: number) {
+  async createEscalation(assetId: string, reason: string, level: number) {
     const existingEscalation = await prisma.escalation.findFirst({
       where: {
         assetId,
-        status: 'open'
+        status: 'pending'
       }
     });
 
@@ -224,39 +207,30 @@ export class FollowUpService {
       return existingEscalation;
     }
 
-    const priority = daysSinceContact >= 21 ? 'urgent' : daysSinceContact >= 14 ? 'high' : 'medium';
-
     return await prisma.escalation.create({
       data: {
         assetId,
+        level,
         reason,
-        daysSinceContact,
-        priority,
-        status: 'open'
+        status: 'pending'
       }
     });
   }
 
-  /**
-   * Resolve escalation
-   */
-  async resolveEscalation(escalationId: number) {
+  async resolveEscalation(escalationId: string) {
     return await prisma.escalation.update({
       where: { id: escalationId },
       data: {
         status: 'resolved',
-        resolvedAt: new Date()
+        resolvedDate: new Date()
       }
     });
   }
 
-  /**
-   * Get all open escalations for an estate
-   */
-  async getOpenEscalations(estateId: number) {
+  async getOpenEscalations(estateId: string) {
     return await prisma.escalation.findMany({
       where: {
-        status: 'open',
+        status: 'pending',
         asset: {
           estateId
         }
@@ -270,7 +244,6 @@ export class FollowUpService {
     });
   }
 
-  // Helper methods
   private calculateDaysSince(date: Date): number {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
@@ -280,7 +253,11 @@ export class FollowUpService {
 
   private getHighestPriorityRule(rules: FollowUpRule[]): FollowUpRule {
     const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-    return rules.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])[0];
+    const sorted = rules.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    if (sorted.length === 0) {
+      throw new Error('No rules provided to getHighestPriorityRule');
+    }
+    return sorted[0]!; // Non-null assertion since we checked length
   }
 }
 

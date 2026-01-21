@@ -6,13 +6,13 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx --env-file=.env src/index.ts",
-    "build": "prisma generate && tsc",
+    "build": "npx prisma@5.22.0 generate && tsc",
     "start": "node dist/index.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy",
-    "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && tsc",
+    "prisma:generate": "npx prisma@5.22.0 generate",
+    "prisma:migrate": "npx prisma@5.22.0 migrate dev",
+    "prisma:migrate:deploy": "npx prisma@5.22.0 migrate deploy",
+    "postinstall": "npx prisma@5.22.0 generate",
+    "vercel-build": "npx prisma@5.22.0 generate && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "prisma": {
@@ -22,7 +22,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^5.22.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -52,6 +51,7 @@
     "experimentalSpecifierResolution": "node"
   },
   "devDependencies": {
+    "@prisma/client": "^5.22.0",
     "@types/handlebars": "^4.0.40"
   }
 }

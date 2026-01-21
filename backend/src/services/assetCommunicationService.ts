@@ -257,6 +257,8 @@ export class AssetCommunicationService {
         if (communications.length === 0) return;
 
         const lastCommunication = communications[0];
+        if (!lastCommunication) return;
+
         const daysSinceLastContact = Math.floor(
             (Date.now() - lastCommunication.date.getTime()) / (1000 * 60 * 60 * 24)
         );
@@ -273,7 +275,7 @@ export class AssetCommunicationService {
         if (existingEscalation) return;
 
         // Escalation rules
-        if (daysSinceLastContact >= 14 && !lastCommunication.response) {
+        if (lastCommunication && daysSinceLastContact >= 14 && !lastCommunication.response) {
             // Level 2: Supervisor escalation after 14 days
             await prisma.escalation.create({
                 data: {
@@ -318,11 +320,11 @@ export class AssetCommunicationService {
         const inboundCount = communications.filter(c => c.direction === 'inbound').length;
         const responsesReceived = communications.filter(c => c.response).length;
 
-        const firstContact = communications.length > 0 
+        const firstContact = communications.length > 0 && communications[0]
             ? communications.reduce((earliest, c) => c.date < earliest ? c.date : earliest, communications[0].date)
             : null;
 
-        const lastContact = communications.length > 0
+        const lastContact = communications.length > 0 && communications[0]
             ? communications.reduce((latest, c) => c.date > latest ? c.date : latest, communications[0].date)
             : null;
 

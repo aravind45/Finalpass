@@ -128,7 +128,7 @@ router.put('/communications/:communicationId', requireAuth, async (req: Request,
         const { communicationId } = req.params;
         const { response, responseDate, nextActionDate, nextActionType } = req.body;
 
-        const communication = await assetCommunicationService.updateCommunication(communicationId, {
+        const communication = await assetCommunicationService.updateCommunication(communicationId as string, {
             response,
             responseDate: responseDate ? new Date(responseDate) : undefined,
             nextActionDate: nextActionDate ? new Date(nextActionDate) : undefined,
@@ -161,7 +161,7 @@ router.get('/:assetId/checklist', requireAuth, async (req: Request, res: Respons
     try {
         const { assetId } = req.params;
         const checklist = await prisma.assetChecklist.findMany({
-            where: { assetId },
+            where: { assetId: assetId as string },
             orderBy: { sortOrder: 'asc' }
         });
         res.json({ success: true, checklist });

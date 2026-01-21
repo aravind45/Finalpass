@@ -9,10 +9,10 @@ const router = express.Router();
  */
 router.get('/estate/:estateId', async (req, res) => {
   try {
-    const estateId = parseInt(req.params.estateId);
-    
+    const estateId = req.params.estateId;
+
     const recommendations = await followUpService.getFollowUpRecommendations(estateId);
-    
+
     res.json({
       success: true,
       recommendations,
@@ -33,10 +33,10 @@ router.get('/estate/:estateId', async (req, res) => {
  */
 router.get('/asset/:assetId', async (req, res) => {
   try {
-    const assetId = parseInt(req.params.assetId);
-    
+    const assetId = req.params.assetId;
+
     const recommendations = await followUpService.getAssetFollowUpRecommendations(assetId);
-    
+
     res.json({
       success: true,
       recommendations
@@ -57,20 +57,20 @@ router.get('/asset/:assetId', async (req, res) => {
 router.post('/escalate', async (req, res) => {
   try {
     const { assetId, reason, daysSinceContact } = req.body;
-    
+
     if (!assetId || !reason || daysSinceContact === undefined) {
       return res.status(400).json({
         success: false,
         error: 'Missing required fields: assetId, reason, daysSinceContact'
       });
     }
-    
+
     const escalation = await followUpService.createEscalation(
-      parseInt(assetId),
+      assetId,
       reason,
       parseInt(daysSinceContact)
     );
-    
+
     res.json({
       success: true,
       escalation
@@ -90,10 +90,10 @@ router.post('/escalate', async (req, res) => {
  */
 router.put('/escalation/:id/resolve', async (req, res) => {
   try {
-    const escalationId = parseInt(req.params.id);
-    
+    const escalationId = req.params.id;
+
     const escalation = await followUpService.resolveEscalation(escalationId);
-    
+
     res.json({
       success: true,
       escalation
@@ -113,10 +113,10 @@ router.put('/escalation/:id/resolve', async (req, res) => {
  */
 router.get('/escalations/:estateId', async (req, res) => {
   try {
-    const estateId = parseInt(req.params.estateId);
-    
+    const estateId = req.params.estateId;
+
     const escalations = await followUpService.getOpenEscalations(estateId);
-    
+
     res.json({
       success: true,
       escalations,

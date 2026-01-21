@@ -246,11 +246,11 @@ export class FaxService {
         // Handle mock IDs
         if (providerFaxId.startsWith('PFX-MOCK-')) {
             const mockStates: FaxStatus['status'][] = ['sending', 'sent', 'delivered'];
-            const randomState = mockStates[Math.floor(Math.random() * mockStates.length)];
+            const randomState = mockStates[Math.floor(Math.random() * mockStates.length)] || 'pending';
             return {
                 status: randomState,
                 providerStatus: 'mock_' + randomState,
-                deliveredAt: randomState === 'delivered' ? new Date() : null
+                deliveredAt: randomState === 'delivered' ? new Date() : undefined
             };
         }
 

@@ -89,6 +89,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
+
 app.get('/db-health', async (req, res) => {
     try {
         const estateCount = await prisma.estate.count();

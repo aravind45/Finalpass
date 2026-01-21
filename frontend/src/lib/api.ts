@@ -1,7 +1,7 @@
 // API Configuration
 // This file centralizes API URL configuration for all environments
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = '/api'; // Monorepo: API is served from same origin at /api
 
 /**
  * Get the full API URL for a given endpoint

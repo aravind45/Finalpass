@@ -10,6 +10,14 @@ coverage/
 build/
 dist/
 
+# TypeScript build output
+*.d.ts
+*.d.ts.map
+*.js
+*.js.map
+!frontend/src/**/*.js
+!frontend/src/**/*.jsx
+
 # Misc
 .DS_Store
 .env

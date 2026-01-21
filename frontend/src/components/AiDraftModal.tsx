@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getApiUrl } from '@/lib/api';
 
 
 interface AiDraftModalProps {
@@ -37,7 +38,7 @@ export const AiDraftModal: React.FC<AiDraftModalProps> = ({ isOpen, onClose, ini
         setIsLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:3000/api/communication/draft', {
+            const response = await fetch(getApiUrl('/api/communication/draft'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 interface FollowUpRecommendation {
-  assetId: number;
+  assetId: string;
   institution: string;
   assetType: string;
   value: number;
@@ -19,7 +19,7 @@ interface FollowUpRecommendation {
 }
 
 interface FollowUpWidgetProps {
-  estateId: number;
+  estateId: string;
 }
 
 const FollowUpWidget: React.FC<FollowUpWidgetProps> = ({ estateId }) => {
@@ -68,7 +68,7 @@ const FollowUpWidget: React.FC<FollowUpWidgetProps> = ({ estateId }) => {
       medium: 'bg-blue-100 text-blue-800 border-blue-200',
       low: 'bg-slate-100 text-slate-800 border-slate-200'
     };
-    
+
     return (
       <Badge className={`${variants[priority]} border`}>
         {priority.toUpperCase()}
@@ -142,7 +142,7 @@ const FollowUpWidget: React.FC<FollowUpWidgetProps> = ({ estateId }) => {
             <div className="flex-shrink-0 mt-0.5">
               {getPriorityIcon(rec.priority)}
             </div>
-            
+
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -155,11 +155,11 @@ const FollowUpWidget: React.FC<FollowUpWidgetProps> = ({ estateId }) => {
                 </div>
                 {getPriorityBadge(rec.priority)}
               </div>
-              
+
               <p className="text-sm text-foreground">
                 {rec.message}
               </p>
-              
+
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span>{rec.daysSinceContact} days since last contact</span>
@@ -167,7 +167,7 @@ const FollowUpWidget: React.FC<FollowUpWidgetProps> = ({ estateId }) => {
             </div>
           </div>
         ))}
-        
+
         {recommendations.length > 5 && (
           <Button
             variant="outline"

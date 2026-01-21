@@ -27,10 +27,10 @@ export const getApiUrl = (endpoint: string): string => {
  */
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token');
-  
-  const headers: HeadersInit = {
+
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string> || {}),
   };
 
   if (token) {
@@ -52,9 +52,9 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
  */
 export const apiUpload = async (endpoint: string, formData: FormData, options: RequestInit = {}) => {
   const token = localStorage.getItem('token');
-  
-  const headers: HeadersInit = {
-    ...options.headers,
+
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> || {}),
   };
 
   if (token) {

@@ -19,6 +19,7 @@ interface Asset {
 }
 
 interface Estate {
+    id: string;
     name: string;
     status: string;
     assets: Asset[];
@@ -34,7 +35,9 @@ const Dashboard = () => {
             try {
                 const token = localStorage.getItem('token');
                 const response = await fetch('/api/estates/dashboard', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
                 const data = await response.json();
                 if (data.success) {
